@@ -3,24 +3,24 @@
  * screens/ProfileScreen.tsx — Tela de Perfil do Usuário
  * ============================================================
  *
- * Tela que exibe as informações do perfil do usuário.
- * Atualmente usa dados mock (estáticos), mas a estrutura
- * está pronta para integrar com autenticação futura.
+ * Tela que exibe as informações reais do perfil do usuário
+ * autenticado via AuthContext. Os dados vêm do JWT/API.
  *
  * Seções:
- * 1. Avatar com nome e e-mail
+ * 1. Avatar com nome e e-mail (dados reais do AuthContext)
  * 2. Estatísticas rápidas (total de agendamentos)
  * 3. Menu de opções (Editar Perfil, Notificações, Sobre, Sair)
  *
- * Cada opção do menu é um TouchableOpacity que pode ser
- * conectado a ações futuras (navegação, modais, etc).
+ * O botão "Sair" chama a função logout do AuthContext,
+ * que remove o token e redireciona para a tela de Login.
  * ============================================================
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Colors } from '../theme/colors';
 import { useAppointments } from '../context/AppointmentsContext';
+import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 
 /**
@@ -73,6 +73,29 @@ const menuItems: MenuItem[] = [
 export default function ProfileScreen() {
   /** Lê os agendamentos para exibir estatísticas */
   const { appointments } = useAppointments();
+  /** Dados do usuário autenticado e função de logout */
+  const { user, logout } = useAuth();
+
+  /**
+   * Handler do botão "Sair"
+   * Exibe confirmação antes de fazer logout
+   */
+  const handleLogout = () => {
+    Alert.alert(
+      'Sair da conta',
+      'Tem certeza que deseja sair?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -89,16 +112,18 @@ export default function ProfileScreen() {
       >
         {/* ──── Avatar e Informações do Usuário ──── */}
         <View style={styles.profileCard}>
-          {/* Avatar circular com iniciais ou emoji */}
+          {/* Avatar circular com inicial do nome do usuário */}
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>👩</Text>
+            <Text style={styles.avatarText}>
+              {user?.name ? user.name.charAt(0).toUpperCase() : '👤'}
+            </Text>
           </View>
 
-          {/* Nome do usuário (mock) */}
-          <Text style={styles.userName}>Maria Silva</Text>
+          {/* Nome do usuário (dados reais do AuthContext) */}
+          <Text style={styles.userName}>{user?.name || 'Usuário'}</Text>
 
-          {/* E-mail (mock) */}
-          <Text style={styles.userEmail}>maria.silva@email.com</Text>
+          {/* E-mail do usuário (dados reais) */}
+          <Text style={styles.userEmail}>{user?.email || ''}</Text>
 
           {/* ──── Estatísticas Rápidas ──── */}
           <View style={styles.statsRow}>
@@ -144,8 +169,11 @@ export default function ProfileScreen() {
               ]}
               activeOpacity={0.6}
               onPress={() => {
-                // TODO: Implementar ações dos itens do menu
-                // Ex: navigation.navigate('EditProfile')
+                // Ação do botão "Sair" — chama o logout
+                if (item.id === 'logout') {
+                  handleLogout();
+                }
+                // TODO: Implementar ações dos outros itens do menu
               }}
             >
               {/* Ícone do item (emoji) */}
@@ -219,7 +247,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.primaryLight,
   },
   avatarText: {
-    fontSize: 36,                                 // Emoji grande
+    fontSize: 36,                                 // Inicial do nome ou emoji
+    color: Colors.primary,                        // Rosa principal
+    fontWeight: '700',
   },
   userName: {
     fontSize: 22,                                 // Nome grande

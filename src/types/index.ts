@@ -100,3 +100,29 @@ export type BottomTabParamList = {
   /** Aba Perfil */
   Profile: undefined;
 };
+
+/** Parâmetros das telas de autenticação (AuthStack) */
+export type AuthStackParamList = {
+  /** Tela de Login */
+  Login: undefined;
+  /** Tela de Cadastro */
+  Register: undefined;
+};
+
+/**
+ * AuthUser — Dados do usuário autenticado
+ *
+ * Corresponde ao payload retornado pela API após login/registro.
+ */
+export interface AuthUser {
+  /** ID único do usuário (UUID) */
+  id: string;
+  /** Nome completo */
+  name: string;
+  /** E-mail */
+  email: string;
+  /** Telefone */
+  phone: string;
+  /** Papel no sistema: CLIENT ou ADMIN */
+  role: 'CLIENT' | 'ADMIN';
+}

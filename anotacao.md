@@ -5,7 +5,7 @@
 ## Adicionar a logo da Lorena Dallabrida Designer
 ## Criar um banco de dados
 ## Criar um sistema de login
-## Utilizar o pagar.me para pagamentos
+## Utilizar o Stripe para pagamentos
 ## Criar a página para editar perfil
 ## Criar um sistema de notificação e lembretes
 ## Criar a página de "Sobre"
