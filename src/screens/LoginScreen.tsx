@@ -13,7 +13,7 @@ import React, { useState, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ScrollView,
-  Animated, ActivityIndicator, Alert,
+  Animated, ActivityIndicator, Alert, Image,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors } from '../theme/colors';
@@ -84,9 +84,12 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       >
         {/* Logo decorativo */}
         <View style={styles.logoContainer}>
-          <Text style={styles.logoEmoji}>🌸</Text>
-          <Text style={styles.logoTitle}>App Agendamentos</Text>
-          <Text style={styles.logoSubtitle}>Beleza na palma da sua mão</Text>
+          <Image
+          source={require('../assets/Logo_atualizada-removebg-preview.png')}
+          style={styles.imagemLogo}
+          />
+          <Text style={styles.logoTitle}></Text>
+          <Text style={styles.logoSubtitle}></Text>
         </View>
 
         {/* Card do formulário com shake */}
@@ -127,7 +130,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1, backgroundColor: Colors.rosaLogin },
   scrollContent: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 },
   logoContainer: { alignItems: 'center', marginBottom: 32 },
   logoEmoji: { fontSize: 48, marginBottom: 8 },
@@ -137,6 +140,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderRadius: 20, padding: 24,
     shadowColor: Colors.shadow, shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.08, shadowRadius: 16, elevation: 4,
+  },
+  imagemLogo: {
+    width: 250,
+    height: 250,
   },
   cardTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary, marginBottom: 4 },
   cardSubtitle: { fontSize: 14, color: Colors.textSecondary, marginBottom: 24 },

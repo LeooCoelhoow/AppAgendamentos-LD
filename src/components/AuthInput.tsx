@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',      // Ícone + Input lado a lado
     alignItems: 'center',
-    backgroundColor: Colors.surface,   // Fundo branco
+    backgroundColor: Colors.rosaLogin,   // Fundo branco
     borderRadius: 14,          // Bordas arredondadas
     borderWidth: 1.5,
     borderColor: Colors.border,        // Borda rosa sutil

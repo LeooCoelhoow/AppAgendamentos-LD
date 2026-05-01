@@ -35,6 +35,9 @@ export const Colors = {
   // Cores de Acentuação
   // ──────────────────────────────────────────────
 
+  //** Rosa do background da tela de login */
+  rosaLogin: '#FFD6E0',
+
   /** Rosa pastel — usado em cards, chips e badges */
   accent: '#FFD6E0',
 

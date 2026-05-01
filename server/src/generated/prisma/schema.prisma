@@ -1,0 +1,71 @@
+// ============================================================
+// schema.prisma — Modelos do Banco de Dados
+// ============================================================
+//
+// Define a estrutura das tabelas no PostgreSQL.
+// Modelos atuais:
+//   - User: Cadastro de clientes e administradores
+//   - Appointment: Agendamentos de serviços (preparado para futuro)
+//
+// Enums:
+//   - Role: CLIENT (padrão) ou ADMIN
+//   - Status: PENDING, CONFIRMED, COMPLETED, CANCELLED
+//
+// Para aplicar mudanças no banco:
+//   npx prisma db push
+//
+// Para gerar o Prisma Client:
+//   npx prisma generate
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Modelo de Usuário — representa clientes e administradores
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String
+  password  String // Hash bcrypt — NUNCA armazenar senha em texto plano
+  role      Role     @default(CLIENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Relacionamento 1:N — um usuário pode ter vários agendamentos
+  appointments Appointment[]
+}
+
+/// Modelo de Agendamento — serviços agendados pelos clientes
+model Appointment {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  service   String // Nome do serviço agendado
+  date      DateTime // Data do agendamento
+  time      String // Horário (ex: "14:00")
+  status    Status   @default(PENDING)
+  price     Float // Valor do serviço em reais
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Papel do usuário no sistema
+enum Role {
+  CLIENT // Cliente padrão
+  ADMIN // Administrador (acesso ao painel ADM)
+}
+
+/// Status possíveis de um agendamento
+enum Status {
+  PENDING // Aguardando confirmação
+  CONFIRMED // Confirmado pela administradora
+  COMPLETED // Serviço realizado
+  CANCELLED // Cancelado
+}
