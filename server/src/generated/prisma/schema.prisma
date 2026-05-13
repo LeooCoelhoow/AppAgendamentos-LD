@@ -2,10 +2,11 @@
 // schema.prisma — Modelos do Banco de Dados
 // ============================================================
 //
-// Define a estrutura das tabelas no PostgreSQL.
-// Modelos atuais:
+// Define a estrutura das tabelas no PostgreSQL (Supabase).
+// Modelos:
 //   - User: Cadastro de clientes e administradores
-//   - Appointment: Agendamentos de serviços (preparado para futuro)
+//   - Appointment: Agendamentos de serviços
+//   - Expense: Despesas do administrador (relatório financeiro)
 //
 // Enums:
 //   - Role: CLIENT (padrão) ou ADMIN
@@ -44,16 +45,27 @@ model User {
 
 /// Modelo de Agendamento — serviços agendados pelos clientes
 model Appointment {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  service         String // Nome do serviço agendado
+  date            DateTime // Data do agendamento
+  time            String // Horário (ex: "14:00")
+  status          Status   @default(PENDING)
+  price           Float // Valor do serviço em reais
+  clientConfirmed Boolean  @default(false) // Confirmação da cliente
+  adminConfirmed  Boolean  @default(false) // Confirmação do admin (finalizar atendimento)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+/// Modelo de Despesa — gastos do administrador para o relatório financeiro
+model Expense {
   id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  service   String // Nome do serviço agendado
-  date      DateTime // Data do agendamento
-  time      String // Horário (ex: "14:00")
-  status    Status   @default(PENDING)
-  price     Float // Valor do serviço em reais
+  name      String // Nome/descrição da despesa (ex: "Aluguel do estúdio")
+  value     Float // Valor da despesa em reais
+  date      DateTime @default(now()) // Data da despesa
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 /// Papel do usuário no sistema
@@ -66,6 +78,6 @@ enum Role {
 enum Status {
   PENDING // Aguardando confirmação
   CONFIRMED // Confirmado pela administradora
-  COMPLETED // Serviço realizado
+  COMPLETED // Serviço realizado (ambas confirmações feitas)
   CANCELLED // Cancelado
 }

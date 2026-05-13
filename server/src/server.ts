@@ -26,6 +26,9 @@ import express from 'express';
 import cors from 'cors';
 import { authRoutes } from './routes/auth.routes';
 import { userRoutes } from './routes/user.routes';
+import { appointmentRoutes } from './routes/appointment.routes';
+import { expenseRoutes } from './routes/expense.routes';
+import { reportRoutes } from './routes/report.routes';
 
 // ──── Inicialização do Express ────
 const app = express();
@@ -58,6 +61,15 @@ app.use('/auth', authRoutes);
 
 /** Rotas de usuário (protegidas por JWT) */
 app.use('/users', userRoutes);
+
+/** Rotas de agendamentos (protegidas por JWT, admin routes com adminMiddleware) */
+app.use('/appointments', appointmentRoutes);
+
+/** Rotas de despesas (protegidas por JWT + Admin) */
+app.use('/expenses', expenseRoutes);
+
+/** Rotas de relatórios (protegidas por JWT + Admin) */
+app.use('/reports', reportRoutes);
 
 // ──── Inicialização do Servidor ────
 const PORT = process.env.PORT || 3333;

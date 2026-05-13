@@ -11,6 +11,7 @@
  *   permitir navegação Home → Booking
  * - 📋 Agendamentos — lista de agendamentos marcados
  * - 👤 Perfil — informações do usuário
+ * - 🔑 Admin — painel administrativo (somente para ADMIN)
  *
  * Estrutura de navegação:
  * BottomTabs
@@ -18,7 +19,10 @@
  *   │     ├── HomeMain (HomeScreen)
  *   │     └── Booking (BookingScreen)
  *   ├── Appointments (AppointmentsScreen)
- *   └── Profile (ProfileScreen)
+ *   ├── Profile (ProfileScreen)
+ *   └── Admin (AdminTabs) ← Apenas para role ADMIN
+ *         ├── AdminAppointments
+ *         └── AdminFinancial
  *
  * O Stack Navigator dentro de Home permite que o usuário
  * navegue da HomeScreen para a BookingScreen sem perder
@@ -32,12 +36,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Text, View, StyleSheet } from 'react-native';
 import { Colors } from '../theme/colors';
 import { BottomTabParamList, HomeStackParamList } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 // ──── Importação das Telas ────
 import HomeScreen from '../screens/HomeScreen';
 import BookingScreen from '../screens/BookingScreen';
 import AppointmentsScreen from '../screens/AppointmentsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import AdminTabs from './AdminTabs';
 
 // ──────────────────────────────────────────────
 // Stack Navigator — Navegação dentro da aba Home
@@ -71,7 +77,7 @@ function HomeStackNavigator() {
 // ──────────────────────────────────────────────
 
 /**
- * Cria o Bottom Tab Navigator com 3 abas.
+ * Cria o Bottom Tab Navigator com 3-4 abas.
  */
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
@@ -93,6 +99,10 @@ function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
 }
 
 export default function BottomTabs() {
+  /** Acessa os dados do usuário para verificar se é ADMIN */
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -139,6 +149,20 @@ export default function BottomTabs() {
           ),
         }}
       />
+
+      {/* ──── Aba 4: Admin (apenas para ADMIN) ──── */}
+      {isAdmin && (
+        <Tab.Screen
+          name="Admin"
+          component={AdminTabs}
+          options={{
+            tabBarLabel: 'Admin',
+            tabBarIcon: ({ focused }) => (
+              <TabIcon emoji="🔑" focused={focused} />
+            ),
+          }}
+        />
+      )}
     </Tab.Navigator>
   );
 }

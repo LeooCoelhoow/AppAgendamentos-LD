@@ -71,6 +71,110 @@ export interface Appointment {
 
   /** Status atual do agendamento */
   status: 'pendente' | 'confirmado' | 'concluido' | 'cancelado';
+
+  /** Se a cliente confirmou presença */
+  clientConfirmed?: boolean;
+
+  /** Se o admin confirmou/finalizou o atendimento */
+  adminConfirmed?: boolean;
+}
+
+/**
+ * ApiAppointment — Formato do agendamento retornado pela API
+ *
+ * Similar ao Appointment mas com formato do banco de dados
+ * (service como string, date como ISO, status em maiúsculas).
+ */
+export interface ApiAppointment {
+  /** Identificador único do agendamento */
+  id: string;
+
+  /** ID do usuário dono do agendamento */
+  userId: string;
+
+  /** Nome do serviço (string simples, não o objeto completo) */
+  service: string;
+
+  /** Data do agendamento (ISO string) */
+  date: string;
+
+  /** Horário do agendamento (ex: "14:00") */
+  time: string;
+
+  /** Status atual (formato backend: PENDING, CONFIRMED, COMPLETED, CANCELLED) */
+  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+
+  /** Preço do serviço em reais */
+  price: number;
+
+  /** Se a cliente confirmou presença */
+  clientConfirmed: boolean;
+
+  /** Se o admin finalizou o atendimento */
+  adminConfirmed: boolean;
+
+  /** Data de criação (ISO) */
+  createdAt: string;
+
+  /** Data de atualização (ISO) */
+  updatedAt: string;
+
+  /** Dados do usuário (incluído quando admin lista todos) */
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  };
+}
+
+/**
+ * Expense — Despesa do administrador para o relatório financeiro
+ */
+export interface Expense {
+  /** Identificador único da despesa */
+  id: string;
+
+  /** Nome/descrição da despesa (ex: "Aluguel do estúdio") */
+  name: string;
+
+  /** Valor da despesa em reais */
+  value: number;
+
+  /** Data da despesa (ISO string) */
+  date: string;
+
+  /** Data de criação (ISO) */
+  createdAt: string;
+}
+
+/**
+ * FinancialReport — Dados do relatório financeiro
+ */
+export interface FinancialReport {
+  /** Período do filtro aplicado */
+  period: 'thisMonth' | 'lastMonth' | 'all';
+
+  /** Receita total (agendamentos concluídos com ambas confirmações) */
+  totalRevenue: number;
+
+  /** Despesas totais */
+  totalExpenses: number;
+
+  /** Lucro líquido (receita - despesas) */
+  netProfit: number;
+
+  /** Lista detalhada de receitas */
+  revenueItems: {
+    id: string;
+    service: string;
+    clientName: string;
+    price: number;
+    date: string;
+  }[];
+
+  /** Lista detalhada de despesas */
+  expenseItems: Expense[];
 }
 
 /**
@@ -99,6 +203,9 @@ export type BottomTabParamList = {
 
   /** Aba Perfil */
   Profile: undefined;
+
+  /** Aba Admin (só aparece para ADMIN) */
+  Admin: undefined;
 };
 
 /** Parâmetros das telas de autenticação (AuthStack) */

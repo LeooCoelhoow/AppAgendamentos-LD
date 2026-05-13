@@ -10,6 +10,8 @@
  * O adapter PrismaPg recebe um Pool do node-postgres
  * e gerencia as conexões com o banco de dados.
  *
+ * Conecta ao PostgreSQL do Supabase via pooling (pgBouncer).
+ *
  * Em modo de desenvolvimento, a instância é armazenada no
  * objeto global do Node.js para sobreviver ao hot-reload
  * do nodemon.
@@ -34,7 +36,7 @@ declare global {
 /**
  * Cria uma nova instância do PrismaClient com adapter pg
  *
- * O Pool gerencia as conexões TCP com o PostgreSQL.
+ * O Pool gerencia as conexões TCP com o PostgreSQL (Supabase).
  * O PrismaPg adapta o Pool para o formato esperado pelo Prisma.
  */
 function createPrismaClient(): PrismaClient {

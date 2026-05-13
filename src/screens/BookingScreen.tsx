@@ -11,7 +11,7 @@
  * 2. Usuário seleciona uma DATA (DateSelector)
  * 3. Usuário seleciona um HORÁRIO (TimeSlotGrid)
  * 4. Confirma o agendamento (PinkButton)
- * 5. Agendamento é salvo no contexto e navega de volta
+ * 5. Agendamento é salvo no BACKEND via API e navega de volta
  *
  * Validação:
  * - Botão só fica habilitado se data E horário forem selecionados
@@ -20,7 +20,7 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { HomeStackParamList } from '../types';
@@ -41,7 +41,7 @@ export default function BookingScreen() {
   /** Hook de navegação para voltar à tela anterior */
   const navigation = useNavigation();
 
-  /** Hook para adicionar agendamento ao contexto global */
+  /** Hook para adicionar agendamento ao contexto global (agora via API) */
   const { addAppointment } = useAppointments();
 
   // ──────────────────────────────────────────────
@@ -54,49 +54,58 @@ export default function BookingScreen() {
   /** Horário selecionado pelo usuário (formato "HH:00") */
   const [selectedTime, setSelectedTime] = useState<string>('');
 
+  /** Estado de loading ao salvar */
+  const [isSaving, setIsSaving] = useState(false);
+
   /**
    * Verifica se o botão de confirmar deve estar habilitado
    * Só habilita se AMBOS data e horário foram selecionados
    */
-  const isFormValid = selectedDate !== '' && selectedTime !== '';
+  const isFormValid = selectedDate !== '' && selectedTime !== '' && !isSaving;
 
   /**
    * handleConfirm — Processa a confirmação do agendamento
    *
-   * 1. Cria um objeto Appointment com ID único (timestamp)
-   * 2. Adiciona ao contexto global via addAppointment()
-   * 3. Exibe Alert de sucesso
-   * 4. Navega de volta para a tela Home
+   * 1. Envia o agendamento para o backend via API
+   * 2. Exibe Alert de sucesso
+   * 3. Navega de volta para a tela Home
    */
-  const handleConfirm = () => {
-    // Cria o agendamento com ID baseado no timestamp atual
-    const newAppointment = {
-      id: Date.now().toString(),       // ID único baseado no timestamp
-      service: service,                 // Serviço selecionado (vem da navegação)
-      date: selectedDate,               // Data selecionada pelo usuário
-      time: selectedTime,               // Horário selecionado pelo usuário
-      status: 'confirmado' as const,    // Status inicial como confirmado
-    };
+  const handleConfirm = async () => {
+    try {
+      setIsSaving(true);
 
-    // Salva o agendamento no contexto global
-    addAppointment(newAppointment);
+      // Cria o agendamento no backend
+      await addAppointment({
+        service: service.name,
+        date: selectedDate,
+        time: selectedTime,
+        price: service.price,
+      });
 
-    // Formata a data para exibição no Alert (DD/MM/YYYY)
-    const [year, month, day] = selectedDate.split('-');
-    const formattedDate = `${day}/${month}/${year}`;
+      // Formata a data para exibição no Alert (DD/MM/YYYY)
+      const [year, month, day] = selectedDate.split('-');
+      const formattedDate = `${day}/${month}/${year}`;
 
-    // Exibe Alert de confirmação
-    Alert.alert(
-      'Agendamento Confirmado! ✅',
-      `${service.name}\n📅 ${formattedDate} às ${selectedTime}\n💰 R$ ${service.price.toFixed(2).replace('.', ',')}`,
-      [
-        {
-          text: 'OK',
-          // Volta para a tela Home ao fechar o Alert
-          onPress: () => navigation.goBack(),
-        },
-      ]
-    );
+      // Exibe Alert de confirmação
+      Alert.alert(
+        'Agendamento Confirmado! ✅',
+        `${service.name}\n📅 ${formattedDate} às ${selectedTime}\n💰 R$ ${service.price.toFixed(2).replace('.', ',')}`,
+        [
+          {
+            text: 'OK',
+            // Volta para a tela Home ao fechar o Alert
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
+    } catch (error: any) {
+      Alert.alert(
+        'Erro ao agendar',
+        error.message || 'Ocorreu um erro ao salvar o agendamento. Tente novamente.',
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -151,11 +160,18 @@ export default function BookingScreen() {
         />
 
         {/* ──── Botão de Confirmar ──── */}
-        <PinkButton
-          title="Confirmar Agendamento ✨"
-          onPress={handleConfirm}
-          disabled={!isFormValid}               // Desabilitado se algum campo estiver vazio
-        />
+        {isSaving ? (
+          <View style={styles.savingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.savingText}>Salvando agendamento...</Text>
+          </View>
+        ) : (
+          <PinkButton
+            title="Confirmar Agendamento ✨"
+            onPress={handleConfirm}
+            disabled={!isFormValid}               // Desabilitado se algum campo estiver vazio
+          />
+        )}
 
         {/* Espaço no final */}
         <View style={styles.bottomSpacer} />
@@ -166,9 +182,6 @@ export default function BookingScreen() {
 
 /**
  * Estilos da BookingScreen
- *
- * Card de serviço no topo com layout horizontal.
- * DateSelector e TimeSlotGrid abaixo com espaçamento generoso.
  */
 const styles = StyleSheet.create({
   container: {
@@ -236,6 +249,15 @@ const styles = StyleSheet.create({
   },
   serviceDuration: {
     fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  savingContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  savingText: {
+    marginTop: 8,
+    fontSize: 14,
     color: Colors.textSecondary,
   },
   bottomSpacer: {

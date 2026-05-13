@@ -14,10 +14,27 @@
  *     • Dispositivo físico: http://<IP-LOCAL>:3333
  *
  * Funções:
- *   - loginAPI(email, password) — Autentica o usuário
- *   - registerAPI(name, email, phone, password) — Cadastra
- *   - getProfileAPI(token) — Retorna o perfil autenticado
- *   - updateProfileAPI(token, data) — Atualiza o perfil
+ *   Autenticação:
+ *     - loginAPI(email, password) — Autentica o usuário
+ *     - registerAPI(name, email, phone, password) — Cadastra
+ *     - getProfileAPI(token) — Retorna o perfil autenticado
+ *     - updateProfileAPI(token, data) — Atualiza o perfil
+ *
+ *   Agendamentos:
+ *     - createAppointmentAPI(token, data) — Cria agendamento
+ *     - getMyAppointmentsAPI(token) — Lista agendamentos do cliente
+ *     - clientConfirmAppointmentAPI(token, id) — Cliente confirma
+ *     - getAllAppointmentsAPI(token) — Admin lista todos
+ *     - adminConfirmAppointmentAPI(token, id) — Admin finaliza
+ *     - cancelAppointmentAPI(token, id) — Admin cancela
+ *
+ *   Despesas:
+ *     - createExpenseAPI(token, data) — Cria despesa
+ *     - getExpensesAPI(token) — Lista despesas
+ *     - deleteExpenseAPI(token, id) — Remove despesa
+ *
+ *   Relatórios:
+ *     - getFinancialReportAPI(token, period) — Relatório financeiro
  *
  * Uso:
  *   import { loginAPI } from '../services/api';
@@ -26,6 +43,7 @@
  */
 
 import { Platform } from 'react-native';
+import { ApiAppointment, Expense, FinancialReport } from '../types';
 
 /**
  * URL base da API
@@ -180,4 +198,180 @@ export async function updateProfileAPI(
     method: 'PUT',
     body: JSON.stringify(data),
   }, token);
+}
+
+// ──────────────────────────────────────────────
+// Funções da API — Agendamentos
+// ──────────────────────────────────────────────
+
+/**
+ * Cria um novo agendamento no banco de dados
+ *
+ * @param token - Token JWT
+ * @param data - Dados do agendamento (service, date, time, price)
+ * @returns Agendamento criado
+ */
+export async function createAppointmentAPI(
+  token: string,
+  data: { service: string; date: string; time: string; price: number }
+): Promise<{ appointment: ApiAppointment }> {
+  return apiRequest<{ appointment: ApiAppointment }>('/appointments', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, token);
+}
+
+/**
+ * Lista os agendamentos do cliente logado
+ *
+ * @param token - Token JWT
+ * @returns Lista de agendamentos do usuário
+ */
+export async function getMyAppointmentsAPI(
+  token: string
+): Promise<{ appointments: ApiAppointment[] }> {
+  return apiRequest<{ appointments: ApiAppointment[] }>('/appointments/my', {
+    method: 'GET',
+  }, token);
+}
+
+/**
+ * Cliente confirma presença no agendamento
+ *
+ * @param token - Token JWT
+ * @param id - ID do agendamento
+ * @returns Agendamento atualizado
+ */
+export async function clientConfirmAppointmentAPI(
+  token: string,
+  id: string
+): Promise<{ appointment: ApiAppointment }> {
+  return apiRequest<{ appointment: ApiAppointment }>(
+    `/appointments/${id}/client-confirm`,
+    { method: 'PATCH' },
+    token
+  );
+}
+
+/**
+ * Admin lista TODOS os agendamentos
+ *
+ * @param token - Token JWT (admin)
+ * @returns Todos os agendamentos com dados do cliente
+ */
+export async function getAllAppointmentsAPI(
+  token: string
+): Promise<{ appointments: ApiAppointment[] }> {
+  return apiRequest<{ appointments: ApiAppointment[] }>('/appointments/all', {
+    method: 'GET',
+  }, token);
+}
+
+/**
+ * Admin confirma/finaliza atendimento
+ *
+ * @param token - Token JWT (admin)
+ * @param id - ID do agendamento
+ * @returns Agendamento atualizado
+ */
+export async function adminConfirmAppointmentAPI(
+  token: string,
+  id: string
+): Promise<{ appointment: ApiAppointment }> {
+  return apiRequest<{ appointment: ApiAppointment }>(
+    `/appointments/${id}/admin-confirm`,
+    { method: 'PATCH' },
+    token
+  );
+}
+
+/**
+ * Admin cancela um agendamento
+ *
+ * @param token - Token JWT (admin)
+ * @param id - ID do agendamento
+ * @returns Agendamento atualizado
+ */
+export async function cancelAppointmentAPI(
+  token: string,
+  id: string
+): Promise<{ appointment: ApiAppointment }> {
+  return apiRequest<{ appointment: ApiAppointment }>(
+    `/appointments/${id}/cancel`,
+    { method: 'PATCH' },
+    token
+  );
+}
+
+// ──────────────────────────────────────────────
+// Funções da API — Despesas (Admin)
+// ──────────────────────────────────────────────
+
+/**
+ * Admin cria uma nova despesa
+ *
+ * @param token - Token JWT (admin)
+ * @param data - Nome e valor da despesa
+ * @returns Despesa criada
+ */
+export async function createExpenseAPI(
+  token: string,
+  data: { name: string; value: number }
+): Promise<{ expense: Expense }> {
+  return apiRequest<{ expense: Expense }>('/expenses', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, token);
+}
+
+/**
+ * Admin lista todas as despesas
+ *
+ * @param token - Token JWT (admin)
+ * @returns Lista de despesas
+ */
+export async function getExpensesAPI(
+  token: string
+): Promise<{ expenses: Expense[] }> {
+  return apiRequest<{ expenses: Expense[] }>('/expenses', {
+    method: 'GET',
+  }, token);
+}
+
+/**
+ * Admin remove uma despesa
+ *
+ * @param token - Token JWT (admin)
+ * @param id - ID da despesa
+ * @returns Mensagem de sucesso
+ */
+export async function deleteExpenseAPI(
+  token: string,
+  id: string
+): Promise<{ message: string }> {
+  return apiRequest<{ message: string }>(`/expenses/${id}`, {
+    method: 'DELETE',
+  }, token);
+}
+
+// ──────────────────────────────────────────────
+// Funções da API — Relatórios (Admin)
+// ──────────────────────────────────────────────
+
+/**
+ * Busca o relatório financeiro
+ *
+ * @param token - Token JWT (admin)
+ * @param period - Filtro de período: 'thisMonth', 'lastMonth' ou 'all'
+ * @returns Dados completos do relatório financeiro
+ */
+export async function getFinancialReportAPI(
+  token: string,
+  period: 'thisMonth' | 'lastMonth' | 'all' = 'all'
+): Promise<FinancialReport> {
+  return apiRequest<FinancialReport>(
+    `/reports/financial?period=${period}`,
+    { method: 'GET' },
+    token
+  );
 }

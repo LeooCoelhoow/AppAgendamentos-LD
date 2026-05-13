@@ -77,8 +77,23 @@ export const Colors = {
   /** Sucesso — verde suave para confirmações */
   success: '#4CAF50',
 
+  /** Verde claro — fundo de cards de receita */
+  successLight: '#E8F5E9',
+
   /** Alerta — amarelo suave para avisos */
   warning: '#FFC107',
+
+  /** Perigo — vermelho para despesas e remoção */
+  danger: '#E74C3C',
+
+  /** Vermelho claro — fundo de cards de despesa */
+  dangerLight: '#FFEBEE',
+
+  /** Dourado — destaque para lucro e valores positivos */
+  gold: '#F4C430',
+
+  /** Azul informativo — fundo para badges informativas */
+  infoBg: '#E3F2FD',
 
   /** Sombra — cor base para box shadows */
   shadow: '#D4587A',

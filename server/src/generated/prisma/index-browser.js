@@ -139,8 +139,18 @@ exports.Prisma.AppointmentScalarFieldEnum = {
   time: 'time',
   status: 'status',
   price: 'price',
+  clientConfirmed: 'clientConfirmed',
+  adminConfirmed: 'adminConfirmed',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ExpenseScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  value: 'value',
+  date: 'date',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -166,7 +176,8 @@ exports.Status = exports.$Enums.Status = {
 
 exports.Prisma.ModelName = {
   User: 'User',
-  Appointment: 'Appointment'
+  Appointment: 'Appointment',
+  Expense: 'Expense'
 };
 
 /**

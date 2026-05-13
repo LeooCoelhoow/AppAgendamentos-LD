@@ -4,54 +4,58 @@
  * ============================================================
  *
  * Context API para gerenciar o estado global de agendamentos.
- * Permite que as telas compartilhem os agendamentos marcados
- * sem precisar passar props manualmente entre elas.
+ * Agora integrado com o backend via API REST.
  *
  * Funcionalidades:
- * - addAppointment: Adiciona um novo agendamento à lista
- * - appointments: Lista de todos os agendamentos marcados
- *
- * Uso:
- *   // No componente que precisa acessar os agendamentos:
- *   const { appointments, addAppointment } = useAppointments();
+ * - appointments: Lista de agendamentos do usuário
+ * - isLoading: Estado de carregamento
+ * - addAppointment: Cria agendamento no backend e atualiza estado
+ * - fetchAppointments: Recarrega agendamentos da API
+ * - confirmAppointment: Cliente confirma presença
  *
  * O Provider deve envolver toda a árvore de componentes
  * no App.tsx para que todas as telas tenham acesso.
  * ============================================================
  */
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Appointment } from '../types';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { ApiAppointment } from '../types';
+import { useAuth } from './AuthContext';
+import {
+  createAppointmentAPI,
+  getMyAppointmentsAPI,
+  clientConfirmAppointmentAPI,
+} from '../services/api';
 
 /**
  * Tipagem do contexto
- *
- * Define os dados e funções disponíveis para os consumidores
- * do contexto de agendamentos.
  */
 interface AppointmentsContextType {
-  /** Lista de todos os agendamentos marcados pelo usuário */
-  appointments: Appointment[];
+  /** Lista de agendamentos do usuário (formato API) */
+  appointments: ApiAppointment[];
 
-  /** Adiciona um novo agendamento à lista */
-  addAppointment: (appointment: Appointment) => void;
+  /** Se está carregando os agendamentos */
+  isLoading: boolean;
+
+  /** Cria um novo agendamento no backend */
+  addAppointment: (data: {
+    service: string;
+    date: string;
+    time: string;
+    price: number;
+  }) => Promise<ApiAppointment>;
+
+  /** Recarrega os agendamentos da API */
+  fetchAppointments: () => Promise<void>;
+
+  /** Cliente confirma presença no agendamento */
+  confirmAppointment: (id: string) => Promise<void>;
 }
 
-/**
- * Criação do contexto com valor inicial undefined
- *
- * O undefined é usado como fallback — se algum componente
- * tentar usar o contexto sem estar dentro do Provider,
- * o hook useAppointments() vai lançar um erro explicativo.
- */
 const AppointmentsContext = createContext<AppointmentsContextType | undefined>(
   undefined
 );
 
-/**
- * Tipagem das props do Provider
- * Aceita children (componentes filhos que terão acesso ao contexto)
- */
 interface AppointmentsProviderProps {
   children: ReactNode;
 }
@@ -59,32 +63,77 @@ interface AppointmentsProviderProps {
 /**
  * AppointmentsProvider — Componente Provider do Contexto
  *
- * Envolve a árvore de componentes e fornece o estado de
- * agendamentos + a função para adicionar novos agendamentos.
- *
- * O useState armazena o array de Appointment localmente.
- * Em uma versão futura, poderia ser substituído por
- * AsyncStorage ou uma API backend.
+ * Busca os agendamentos da API ao montar e fornece funções
+ * para criar e confirmar agendamentos.
  */
 export function AppointmentsProvider({ children }: AppointmentsProviderProps) {
-  /** Estado que armazena todos os agendamentos */
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const { token, isAuthenticated } = useAuth();
+  const [appointments, setAppointments] = useState<ApiAppointment[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   /**
-   * Adiciona um novo agendamento ao estado
-   *
-   * Usa o spread operator para manter os agendamentos existentes
-   * e adicionar o novo no final do array.
-   *
-   * @param appointment - Novo agendamento a ser adicionado
+   * Busca os agendamentos do usuário logado
    */
-  const addAppointment = (appointment: Appointment) => {
-    setAppointments((prev) => [...prev, appointment]);
+  const fetchAppointments = useCallback(async () => {
+    if (!token) return;
+    try {
+      setIsLoading(true);
+      const response = await getMyAppointmentsAPI(token);
+      setAppointments(response.appointments);
+    } catch (error) {
+      console.error('❌ Erro ao buscar agendamentos:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
+
+  // Busca agendamentos quando o usuário está autenticado
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      fetchAppointments();
+    } else {
+      setAppointments([]);
+    }
+  }, [isAuthenticated, token, fetchAppointments]);
+
+  /**
+   * Cria um novo agendamento no backend
+   */
+  const addAppointment = async (data: {
+    service: string;
+    date: string;
+    time: string;
+    price: number;
+  }): Promise<ApiAppointment> => {
+    if (!token) throw new Error('Usuário não autenticado.');
+
+    const response = await createAppointmentAPI(token, data);
+    // Atualiza a lista local
+    await fetchAppointments();
+    return response.appointment;
+  };
+
+  /**
+   * Cliente confirma presença no agendamento
+   */
+  const confirmAppointment = async (id: string): Promise<void> => {
+    if (!token) throw new Error('Usuário não autenticado.');
+
+    await clientConfirmAppointmentAPI(token, id);
+    // Atualiza a lista local
+    await fetchAppointments();
   };
 
   return (
-    /* Fornece o valor do contexto para todos os filhos */
-    <AppointmentsContext.Provider value={{ appointments, addAppointment }}>
+    <AppointmentsContext.Provider
+      value={{
+        appointments,
+        isLoading,
+        addAppointment,
+        fetchAppointments,
+        confirmAppointment,
+      }}
+    >
       {children}
     </AppointmentsContext.Provider>
   );
@@ -93,20 +142,12 @@ export function AppointmentsProvider({ children }: AppointmentsProviderProps) {
 /**
  * useAppointments — Hook customizado para consumir o contexto
  *
- * Facilita o uso do contexto nos componentes. Em vez de
- * importar o Context e usar useContext diretamente, basta
- * chamar useAppointments().
- *
- * Lança um erro se usado fora do AppointmentsProvider,
- * ajudando a identificar bugs de configuração.
- *
- * @returns O contexto com appointments e addAppointment
+ * @returns O contexto com appointments e funções
  * @throws Error se usado fora do Provider
  */
 export function useAppointments(): AppointmentsContextType {
   const context = useContext(AppointmentsContext);
 
-  // Proteção: garante que o hook só é usado dentro do Provider
   if (!context) {
     throw new Error(
       'useAppointments deve ser usado dentro de um <AppointmentsProvider>. ' +
