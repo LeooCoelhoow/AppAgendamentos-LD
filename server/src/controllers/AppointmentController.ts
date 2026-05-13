@@ -107,7 +107,7 @@ export const AppointmentController = {
    */
   async clientConfirm(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
 
       // Busca o agendamento e verifica se pertence ao usuário
       const appointment = await prisma.appointment.findUnique({
@@ -192,7 +192,7 @@ export const AppointmentController = {
    */
   async adminConfirm(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
 
       const appointment = await prisma.appointment.findUnique({
         where: { id },
@@ -240,7 +240,7 @@ export const AppointmentController = {
    */
   async cancel(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
 
       const appointment = await prisma.appointment.findUnique({
         where: { id },

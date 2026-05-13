@@ -87,7 +87,7 @@ export const ExpenseController = {
    */
   async delete(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
 
       const expense = await prisma.expense.findUnique({
         where: { id },
