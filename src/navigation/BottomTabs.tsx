@@ -103,6 +103,49 @@ export default function BottomTabs() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
+  /**
+   * Se o usuário é ADMIN, mostra APENAS as abas exclusivas do admin.
+   * Se é CLIENT, mostra as abas padrão (Home, Agendamentos, Perfil).
+   */
+  if (isAdmin) {
+    return (
+      <Tab.Navigator
+        screenOptions={{
+          headerShown: false,
+          tabBarShowLabel: true,
+          tabBarActiveTintColor: Colors.primary,
+          tabBarInactiveTintColor: Colors.textSecondary,
+          tabBarStyle: styles.tabBar,
+          tabBarLabelStyle: styles.tabLabel,
+        }}
+      >
+        {/* ──── Admin Aba 1: Painel de Agendamentos + Relatório ──── */}
+        <Tab.Screen
+          name="Admin"
+          component={AdminTabs}
+          options={{
+            tabBarLabel: 'Painel',
+            tabBarIcon: ({ focused }) => (
+              <TabIcon emoji="📋" focused={focused} />
+            ),
+          }}
+        />
+
+        {/* ──── Admin Aba 2: Perfil ──── */}
+        <Tab.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+            tabBarLabel: 'Perfil',
+            tabBarIcon: ({ focused }) => (
+              <TabIcon emoji="👤" focused={focused} />
+            ),
+          }}
+        />
+      </Tab.Navigator>
+    );
+  }
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -149,20 +192,6 @@ export default function BottomTabs() {
           ),
         }}
       />
-
-      {/* ──── Aba 4: Admin (apenas para ADMIN) ──── */}
-      {isAdmin && (
-        <Tab.Screen
-          name="Admin"
-          component={AdminTabs}
-          options={{
-            tabBarLabel: 'Admin',
-            tabBarIcon: ({ focused }) => (
-              <TabIcon emoji="🔑" focused={focused} />
-            ),
-          }}
-        />
-      )}
     </Tab.Navigator>
   );
 }

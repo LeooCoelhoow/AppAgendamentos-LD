@@ -34,6 +34,7 @@ import {
   RefreshControl,
   Animated,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { ApiAppointment } from '../types';
@@ -95,6 +96,17 @@ export default function AdminAppointmentsScreen() {
   useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
+
+  /**
+   * Auto-refresh quando a tela ganha foco.
+   * Garante que novos agendamentos de clientes apareçam
+   * assim que o admin navegar para esta aba.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      fetchAppointments();
+    }, [fetchAppointments])
+  );
 
   /**
    * Pull-to-refresh

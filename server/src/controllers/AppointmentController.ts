@@ -273,4 +273,71 @@ export const AppointmentController = {
       });
     }
   },
+
+  /**
+   * Cliente cancela seu próprio agendamento
+   *
+   * Verifica se o agendamento pertence ao usuário e se ainda
+   * não foi concluído ou cancelado antes de permitir o cancelamento.
+   *
+   * @route PATCH /appointments/:id/client-cancel
+   * @access Autenticado (dono do agendamento)
+   */
+  async clientCancel(req: Request, res: Response): Promise<void> {
+    try {
+      const id = req.params.id as string;
+
+      // Busca o agendamento
+      const appointment = await prisma.appointment.findUnique({
+        where: { id },
+      });
+
+      if (!appointment) {
+        res.status(404).json({
+          error: 'Agendamento não encontrado.',
+          code: 'NOT_FOUND',
+        });
+        return;
+      }
+
+      // Verifica se o agendamento pertence ao usuário
+      if (appointment.userId !== req.userId) {
+        res.status(403).json({
+          error: 'Você não tem permissão para cancelar este agendamento.',
+          code: 'FORBIDDEN',
+        });
+        return;
+      }
+
+      // Verifica se o agendamento já foi concluído ou cancelado
+      if (appointment.status === 'COMPLETED') {
+        res.status(400).json({
+          error: 'Não é possível cancelar um atendimento já concluído.',
+          code: 'ALREADY_COMPLETED',
+        });
+        return;
+      }
+
+      if (appointment.status === 'CANCELLED') {
+        res.status(400).json({
+          error: 'Este agendamento já foi cancelado.',
+          code: 'ALREADY_CANCELLED',
+        });
+        return;
+      }
+
+      const updated = await prisma.appointment.update({
+        where: { id },
+        data: { status: 'CANCELLED' },
+      });
+
+      res.status(200).json({ appointment: updated });
+    } catch (error) {
+      console.error('❌ Erro ao cancelar agendamento (cliente):', error);
+      res.status(500).json({
+        error: 'Erro interno do servidor.',
+        code: 'INTERNAL_ERROR',
+      });
+    }
+  },
 };

@@ -29,6 +29,7 @@ import Header from '../components/Header';
 import DateSelector from '../components/DateSelector';
 import TimeSlotGrid from '../components/TimeSlotGrid';
 import PinkButton from '../components/PinkButton';
+import SuccessOverlay from '../components/SuccessOverlay';
 
 /** Tipo da rota para acessar os parâmetros de navegação */
 type BookingRouteProp = RouteProp<HomeStackParamList, 'Booking'>;
@@ -57,6 +58,16 @@ export default function BookingScreen() {
   /** Estado de loading ao salvar */
   const [isSaving, setIsSaving] = useState(false);
 
+  /** Estado do overlay de sucesso */
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  /** Dados formatados para o overlay */
+  const [successData, setSuccessData] = useState({
+    date: '',
+    time: '',
+    price: '',
+  });
+
   /**
    * Verifica se o botão de confirmar deve estar habilitado
    * Só habilita se AMBOS data e horário foram selecionados
@@ -67,8 +78,8 @@ export default function BookingScreen() {
    * handleConfirm — Processa a confirmação do agendamento
    *
    * 1. Envia o agendamento para o backend via API
-   * 2. Exibe Alert de sucesso
-   * 3. Navega de volta para a tela Home
+   * 2. Exibe overlay animado de sucesso
+   * 3. Após a animação, navega de volta para a tela Home
    */
   const handleConfirm = async () => {
     try {
@@ -82,22 +93,17 @@ export default function BookingScreen() {
         price: service.price,
       });
 
-      // Formata a data para exibição no Alert (DD/MM/YYYY)
+      // Formata a data para exibição (DD/MM/YYYY)
       const [year, month, day] = selectedDate.split('-');
       const formattedDate = `${day}/${month}/${year}`;
 
-      // Exibe Alert de confirmação
-      Alert.alert(
-        'Agendamento Confirmado! ✅',
-        `${service.name}\n📅 ${formattedDate} às ${selectedTime}\n💰 R$ ${service.price.toFixed(2).replace('.', ',')}`,
-        [
-          {
-            text: 'OK',
-            // Volta para a tela Home ao fechar o Alert
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      // Salva os dados formatados e mostra o overlay
+      setSuccessData({
+        date: formattedDate,
+        time: selectedTime,
+        price: service.price.toFixed(2).replace('.', ','),
+      });
+      setShowSuccess(true);
     } catch (error: any) {
       Alert.alert(
         'Erro ao agendar',
@@ -106,6 +112,14 @@ export default function BookingScreen() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  /**
+   * handleSuccessDismiss — Quando o overlay fecha, navega para Home
+   */
+  const handleSuccessDismiss = () => {
+    setShowSuccess(false);
+    navigation.goBack();
   };
 
   return (
@@ -176,6 +190,16 @@ export default function BookingScreen() {
         {/* Espaço no final */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* ──────────── OVERLAY DE SUCESSO ──────────── */}
+      <SuccessOverlay
+        visible={showSuccess}
+        serviceName={service.name}
+        date={successData.date}
+        time={successData.time}
+        price={successData.price}
+        onDismiss={handleSuccessDismiss}
+      />
     </View>
   );
 }

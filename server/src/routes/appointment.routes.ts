@@ -38,6 +38,9 @@ appointmentRoutes.get('/my', AppointmentController.getMyAppointments);
 /** Cliente confirma presença */
 appointmentRoutes.patch('/:id/client-confirm', AppointmentController.clientConfirm);
 
+/** Cliente cancela seu próprio agendamento */
+appointmentRoutes.patch('/:id/client-cancel', AppointmentController.clientCancel);
+
 // ──── Rotas do Admin ────
 
 /** Admin lista todos os agendamentos */
