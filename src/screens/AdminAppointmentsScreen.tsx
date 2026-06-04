@@ -33,6 +33,7 @@ import {
   Alert,
   RefreshControl,
   Animated,
+  Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
@@ -120,6 +121,24 @@ export default function AdminAppointmentsScreen() {
    * Admin finaliza o atendimento
    */
   const handleAdminConfirm = async (id: string) => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('Confirma a finalização deste atendimento? O valor será contabilizado no relatório financeiro.');
+      if (confirmed) {
+        try {
+          setActionLoading(id);
+          if (!token) return;
+          await adminConfirmAppointmentAPI(token, id);
+          await fetchAppointments();
+          window.alert('Atendimento finalizado com sucesso! ✅');
+        } catch (error: any) {
+          window.alert(error.message || 'Erro ao confirmar agendamento.');
+        } finally {
+          setActionLoading(null);
+        }
+      }
+      return;
+    }
+
     Alert.alert(
       'Finalizar Atendimento',
       'Confirma a finalização deste atendimento? O valor será contabilizado no relatório financeiro.',
@@ -149,6 +168,24 @@ export default function AdminAppointmentsScreen() {
    * Admin cancela o agendamento
    */
   const handleCancel = async (id: string) => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('Tem certeza que deseja cancelar este agendamento?');
+      if (confirmed) {
+        try {
+          setActionLoading(id);
+          if (!token) return;
+          await cancelAppointmentAPI(token, id);
+          await fetchAppointments();
+          window.alert('Agendamento cancelado com sucesso.');
+        } catch (error: any) {
+          window.alert(error.message || 'Erro ao cancelar agendamento.');
+        } finally {
+          setActionLoading(null);
+        }
+      }
+      return;
+    }
+
     Alert.alert(
       'Cancelar Agendamento',
       'Tem certeza que deseja cancelar este agendamento?',

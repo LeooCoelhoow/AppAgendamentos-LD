@@ -31,7 +31,11 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Animated,
+  Platform
 } from 'react-native';
+import { GestureHandlerRootView, TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { Colors } from '../theme/colors';
 import { useAppointments } from '../context/AppointmentsContext';
 import { ApiAppointment } from '../types';
@@ -91,7 +95,7 @@ const statusConfig: Record<
 };
 
 export default function AppointmentsScreen() {
-  const { appointments, isLoading, fetchAppointments, confirmAppointment } = useAppointments();
+  const { appointments, isLoading, fetchAppointments, confirmAppointment, cancelAppointment } = useAppointments();
 
   /**
    * Pull-to-refresh
@@ -104,6 +108,19 @@ export default function AppointmentsScreen() {
    * Cliente confirma presença
    */
   const handleConfirm = async (appointment: ApiAppointment) => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`Confirma sua presença para ${appointment.service}?`);
+      if (confirmed) {
+        try {
+          await confirmAppointment(appointment.id);
+          window.alert('Presença confirmada com sucesso!');
+        } catch (error: any) {
+          window.alert(error.message || 'Erro ao confirmar presença.');
+        }
+      }
+      return;
+    }
+
     Alert.alert(
       'Confirmar Presença',
       `Confirma sua presença para ${appointment.service}?`,
@@ -125,6 +142,44 @@ export default function AppointmentsScreen() {
   };
 
   /**
+   * Cliente cancela agendamento
+   */
+  const handleCancel = async (appointment: ApiAppointment) => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`Tem certeza que deseja cancelar seu agendamento de ${appointment.service}?`);
+      if (confirmed) {
+        try {
+          await cancelAppointment(appointment.id);
+          window.alert('Seu agendamento foi cancelado.');
+        } catch (error: any) {
+          window.alert(error.message || 'Erro ao cancelar o agendamento.');
+        }
+      }
+      return;
+    }
+
+    Alert.alert(
+      'Cancelar Agendamento',
+      `Tem certeza que deseja cancelar seu agendamento de ${appointment.service}?`,
+      [
+        { text: 'Não', style: 'cancel' },
+        {
+          text: 'Sim, cancelar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await cancelAppointment(appointment.id);
+              Alert.alert('Cancelado', 'Seu agendamento foi cancelado.');
+            } catch (error: any) {
+              Alert.alert('Erro', error.message || 'Erro ao cancelar o agendamento.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  /**
    * Separa os agendamentos por categoria
    */
   const upcoming = appointments.filter(
@@ -136,11 +191,31 @@ export default function AppointmentsScreen() {
   /**
    * Renderiza um card de agendamento
    */
-  const renderAppointmentCard = (appointment: ApiAppointment, showConfirmButton: boolean = false) => {
+  const renderAppointmentCard = (appointment: ApiAppointment, showConfirmButton: boolean = false, isUpcoming: boolean = false) => {
     const status = statusConfig[appointment.status] || statusConfig.PENDING;
 
-    return (
-      <View key={appointment.id} style={styles.card}>
+    const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>) => {
+      const scale = dragX.interpolate({
+        inputRange: [-100, 0],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+      });
+
+      return (
+        <GHTouchableOpacity
+          style={styles.deleteAction}
+          onPress={() => handleCancel(appointment)}
+          activeOpacity={0.8}
+        >
+          <Animated.Text style={[styles.deleteActionText, { transform: [{ scale }] }]}>
+            ✕ Cancelar
+          </Animated.Text>
+        </GHTouchableOpacity>
+      );
+    };
+
+    const cardContent = (
+      <View style={styles.card}>
         {/* Linha superior: Ícone + Nome + Badge */}
         <View style={styles.topRow}>
           <View style={styles.iconContainer}>
@@ -186,22 +261,54 @@ export default function AppointmentsScreen() {
           </Text>
         </View>
 
-        {/* Botão de confirmação — aparece quando não confirmou ainda */}
-        {showConfirmButton && !appointment.clientConfirmed && (
-          <TouchableOpacity
-            style={styles.confirmButton}
-            onPress={() => handleConfirm(appointment)}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.confirmButtonText}>Confirmar Presença ✅</Text>
-          </TouchableOpacity>
+        {/* Botões de Ação */}
+        {(showConfirmButton || isUpcoming) && (
+          <View style={styles.actionButtonsContainer}>
+            {showConfirmButton && !appointment.clientConfirmed && (
+              <GHTouchableOpacity
+                style={styles.confirmButton}
+                onPress={() => handleConfirm(appointment)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.confirmButtonText}>Confirmar Presença ✅</Text>
+              </GHTouchableOpacity>
+            )}
+
+            {isUpcoming && Platform.OS === 'web' && (
+              <GHTouchableOpacity
+                style={styles.cancelButtonWeb}
+                onPress={() => handleCancel(appointment)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.cancelButtonWebText}>Cancelar Agendamento ❌</Text>
+              </GHTouchableOpacity>
+            )}
+          </View>
         )}
+      </View>
+    );
+
+    if (isUpcoming && Platform.OS !== 'web') {
+      return (
+        <Swipeable
+          key={appointment.id}
+          renderRightActions={renderRightActions}
+          overshootRight={false}
+        >
+          {cardContent}
+        </Swipeable>
+      );
+    }
+
+    return (
+      <View key={appointment.id}>
+        {cardContent}
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       {/* ──────────── HEADER ──────────── */}
       <Header
         title="Meus Agendamentos"
@@ -253,7 +360,7 @@ export default function AppointmentsScreen() {
             </View>
 
             {upcoming.map((appointment) =>
-              renderAppointmentCard(appointment, true)
+              renderAppointmentCard(appointment, true, true)
             )}
           </>
         )}
@@ -292,7 +399,7 @@ export default function AppointmentsScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -450,6 +557,38 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 14,
     fontWeight: '700',
+  },
+  actionButtonsContainer: {
+    marginTop: 10,
+  },
+  cancelButtonWeb: {
+    backgroundColor: '#FFE5E5',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#FFBABA',
+  },
+  cancelButtonWebText: {
+    color: Colors.danger,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  deleteAction: {
+    backgroundColor: Colors.danger,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    marginBottom: 12,
+    borderRadius: 16,
+    paddingHorizontal: 24,
+    marginRight: 20,
+    marginTop: 0,
+  },
+  deleteActionText: {
+    color: '#FFF',
+    fontWeight: '700',
+    fontSize: 15,
   },
   bottomSpacer: {
     height: 30,

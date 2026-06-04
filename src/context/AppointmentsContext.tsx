@@ -19,12 +19,21 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { LayoutAnimation, Platform, UIManager } from 'react-native';
+
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { ApiAppointment } from '../types';
 import { useAuth } from './AuthContext';
 import {
   createAppointmentAPI,
   getMyAppointmentsAPI,
   clientConfirmAppointmentAPI,
+  clientCancelAppointmentAPI,
 } from '../services/api';
 
 /**
@@ -50,6 +59,9 @@ interface AppointmentsContextType {
 
   /** Cliente confirma presença no agendamento */
   confirmAppointment: (id: string) => Promise<void>;
+
+  /** Cliente cancela seu agendamento */
+  cancelAppointment: (id: string) => Promise<void>;
 }
 
 const AppointmentsContext = createContext<AppointmentsContextType | undefined>(
@@ -120,7 +132,20 @@ export function AppointmentsProvider({ children }: AppointmentsProviderProps) {
     if (!token) throw new Error('Usuário não autenticado.');
 
     await clientConfirmAppointmentAPI(token, id);
-    // Atualiza a lista local
+    // Anima a atualização da lista
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    await fetchAppointments();
+  };
+
+  /**
+   * Cliente cancela o agendamento
+   */
+  const cancelAppointment = async (id: string): Promise<void> => {
+    if (!token) throw new Error('Usuário não autenticado.');
+
+    await clientCancelAppointmentAPI(token, id);
+    // Anima a atualização da lista
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     await fetchAppointments();
   };
 
@@ -132,6 +157,7 @@ export function AppointmentsProvider({ children }: AppointmentsProviderProps) {
         addAppointment,
         fetchAppointments,
         confirmAppointment,
+        cancelAppointment,
       }}
     >
       {children}

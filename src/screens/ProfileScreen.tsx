@@ -146,7 +146,7 @@ export default function ProfileScreen() {
             {/* Agendamentos confirmados */}
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>
-                {appointments.filter((a) => a.status === 'confirmado').length}
+                {appointments.filter((a) => a.status === 'CONFIRMED').length}
               </Text>
               <Text style={styles.statLabel}>Confirmados</Text>
             </View>
@@ -157,7 +157,7 @@ export default function ProfileScreen() {
             {/* Agendamentos concluídos */}
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>
-                {appointments.filter((a) => a.status === 'concluido').length}
+                {appointments.filter((a) => a.status === 'COMPLETED').length}
               </Text>
               <Text style={styles.statLabel}>Concluídos</Text>
             </View>

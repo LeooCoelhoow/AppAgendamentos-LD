@@ -254,6 +254,24 @@ export async function clientConfirmAppointmentAPI(
 }
 
 /**
+ * Cliente cancela seu próprio agendamento
+ *
+ * @param token - Token JWT
+ * @param id - ID do agendamento
+ * @returns Agendamento cancelado
+ */
+export async function clientCancelAppointmentAPI(
+  token: string,
+  id: string
+): Promise<{ appointment: ApiAppointment }> {
+  return apiRequest<{ appointment: ApiAppointment }>(
+    `/appointments/${id}/client-cancel`,
+    { method: 'PATCH' },
+    token
+  );
+}
+
+/**
  * Admin lista TODOS os agendamentos
  *
  * @param token - Token JWT (admin)
