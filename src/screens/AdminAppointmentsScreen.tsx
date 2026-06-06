@@ -65,8 +65,8 @@ function getServiceEmoji(serviceName: string): string {
   if (lower.includes('design')) return '🖌️';
   if (lower.includes('lash') || lower.includes('lifting')) return '👁️';
   if (lower.includes('henna')) return '🎨';
-  if (lower.includes('micro')) return '💎';
-  if (lower.includes('extensão') || lower.includes('extensao')) return '🌸';
+  if (lower.includes('combo soft glam')) return '🎀';
+  if (lower.includes('combo duo lift') || lower.includes('extensao')) return '💎';
   return '💅';
 }
 

@@ -6,3 +6,4 @@
 ## Ajustar estatísticas do perfil do ADMIN
 ## Retirar a estatística de Confirmados na aba do perfil do cliente
 ## Criar sistema de alteração de senha
+## Ajustar ícones dos serviços prestados nas telas de Appointments
