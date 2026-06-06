@@ -23,11 +23,14 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Colors } from '../theme/colors';
 import { TimeSlot } from '../types';
+import { getMyAppointmentsAPI } from '../services/api';
 
 /** Tipagem das props do TimeSlotGrid */
 interface TimeSlotGridProps {
   /** Horário atualmente selecionado */
   selectedTime: string;
+  /** Data atualmente selecionada */
+  selectedDate: Date | null;
   /** Função chamada ao selecionar um horário */
   onSelectTime: (time: string) => void;
 }
@@ -45,7 +48,7 @@ function generateTimeSlots(): TimeSlot[] {
   const slots: TimeSlot[] = [];
 
   // Horários que estão "ocupados" (simulação mock)
-  const unavailable = ['12:00', '15:00'];
+  const unavailable = ['09:00'] ;
 
   for (let hour = 9; hour <= 18; hour++) {
     const time = `${String(hour).padStart(2, '0')}:00`;
