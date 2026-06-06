@@ -29,6 +29,9 @@ appointmentRoutes.use(authMiddleware);
 
 // ──── Rotas do Cliente ────
 
+/** Obter horários disponíveis para uma data e serviço */
+appointmentRoutes.get('/available-slots', AppointmentController.getAvailableSlots);
+
 /** Criar um novo agendamento */
 appointmentRoutes.post('/', AppointmentController.create);
 

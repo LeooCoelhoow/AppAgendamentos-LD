@@ -32,6 +32,7 @@ import { useAuth } from './AuthContext';
 import {
   createAppointmentAPI,
   getMyAppointmentsAPI,
+  getAvailableSlotsAPI,
   clientConfirmAppointmentAPI,
   clientCancelAppointmentAPI,
 } from '../services/api';
@@ -46,12 +47,20 @@ interface AppointmentsContextType {
   /** Se está carregando os agendamentos */
   isLoading: boolean;
 
+  /** Horários disponíveis para a data/serviço selecionado */
+  availableSlots: string[];
+
+  /** Se está carregando os horários disponíveis */
+  isSlotsLoading: boolean;
+
+  /** Busca horários disponíveis para uma data e serviço */
+  fetchAvailableSlots: (date: string, serviceId: string) => Promise<void>;
+
   /** Cria um novo agendamento no backend */
   addAppointment: (data: {
-    service: string;
+    serviceId: string;
     date: string;
     time: string;
-    price: number;
   }) => Promise<ApiAppointment>;
 
   /** Recarrega os agendamentos da API */
@@ -82,6 +91,8 @@ export function AppointmentsProvider({ children }: AppointmentsProviderProps) {
   const { token, isAuthenticated } = useAuth();
   const [appointments, setAppointments] = useState<ApiAppointment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [isSlotsLoading, setIsSlotsLoading] = useState(false);
 
   /**
    * Busca os agendamentos do usuário logado
@@ -109,13 +120,32 @@ export function AppointmentsProvider({ children }: AppointmentsProviderProps) {
   }, [isAuthenticated, token, fetchAppointments]);
 
   /**
+   * Busca horários disponíveis para uma data e serviço
+   */
+  const fetchAvailableSlots = useCallback(
+    async (date: string, serviceId: string) => {
+      if (!token) return;
+      try {
+        setIsSlotsLoading(true);
+        const response = await getAvailableSlotsAPI(token, date, serviceId);
+        setAvailableSlots(response.availableSlots);
+      } catch (error) {
+        console.error('❌ Erro ao buscar horários disponíveis:', error);
+        setAvailableSlots([]);
+      } finally {
+        setIsSlotsLoading(false);
+      }
+    },
+    [token]
+  );
+
+  /**
    * Cria um novo agendamento no backend
    */
   const addAppointment = async (data: {
-    service: string;
+    serviceId: string;
     date: string;
     time: string;
-    price: number;
   }): Promise<ApiAppointment> => {
     if (!token) throw new Error('Usuário não autenticado.');
 
@@ -154,6 +184,9 @@ export function AppointmentsProvider({ children }: AppointmentsProviderProps) {
       value={{
         appointments,
         isLoading,
+        availableSlots,
+        isSlotsLoading,
+        fetchAvailableSlots,
         addAppointment,
         fetchAppointments,
         confirmAppointment,

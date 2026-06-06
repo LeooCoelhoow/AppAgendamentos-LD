@@ -82,6 +82,9 @@ export const ReportController = {
           user: {
             select: { name: true },
           },
+          service: {
+            select: { name: true },
+          },
         },
         orderBy: { date: 'desc' },
       });
@@ -112,7 +115,7 @@ export const ReportController = {
         netProfit,
         revenueItems: completedAppointments.map((apt) => ({
           id: apt.id,
-          service: apt.service,
+          service: apt.service.name,
           clientName: apt.user.name,
           price: apt.price,
           date: apt.date,

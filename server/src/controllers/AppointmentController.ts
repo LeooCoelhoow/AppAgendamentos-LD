@@ -23,6 +23,11 @@
 
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
+import {
+  isSlotAvailable,
+  getAvailableSlots,
+  getServiceById,
+} from '../lib/appointmentUtils';
 
 export const AppointmentController = {
   /**
@@ -30,16 +35,39 @@ export const AppointmentController = {
    *
    * @route POST /appointments
    * @access Autenticado (qualquer usuário)
+   * @param serviceId - ID do serviço
+   * @param date - Data (YYYY-MM-DD)
+   * @param time - Horário (HH:00)
    */
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const { service, date, time, price } = req.body;
+      const { serviceId, date, time } = req.body;
 
       // ──── Validação básica ────
-      if (!service || !date || !time || price === undefined) {
+      if (!serviceId || !date || !time) {
         res.status(400).json({
-          error: 'Campos obrigatórios: service, date, time, price.',
+          error: 'Campos obrigatórios: serviceId, date, time.',
           code: 'MISSING_FIELDS',
+        });
+        return;
+      }
+
+      // ──── Validar se o serviço existe ────
+      const service = await getServiceById(serviceId);
+      if (!service) {
+        res.status(404).json({
+          error: 'Serviço não encontrado.',
+          code: 'SERVICE_NOT_FOUND',
+        });
+        return;
+      }
+
+      // ──── Validar disponibilidade do horário ────
+      const slotAvailable = await isSlotAvailable(date, time, service.durationMinutes);
+      if (!slotAvailable) {
+        res.status(409).json({
+          error: 'Este horário não está disponível. Por favor, escolha outro.',
+          code: 'SLOT_NOT_AVAILABLE',
         });
         return;
       }
@@ -48,10 +76,10 @@ export const AppointmentController = {
       const appointment = await prisma.appointment.create({
         data: {
           userId: req.userId!,
-          service,
+          serviceId,
           date: new Date(date),
           time,
-          price: parseFloat(price),
+          price: service.price,
           status: 'PENDING',
           clientConfirmed: false,
           adminConfirmed: false,
@@ -59,6 +87,9 @@ export const AppointmentController = {
         include: {
           user: {
             select: { id: true, name: true, email: true, phone: true },
+          },
+          service: {
+            select: { id: true, name: true, durationMinutes: true },
           },
         },
       });
@@ -340,4 +371,52 @@ export const AppointmentController = {
       });
     }
   },
+
+  /**
+   * Retorna horários disponíveis para uma data e serviço específicos
+   *
+   * @route GET /appointments/available-slots?date=YYYY-MM-DD&serviceId=UUID
+   * @access Autenticado
+   * @query date - Data no formato YYYY-MM-DD
+   * @query serviceId - ID do serviço
+   */
+  async getAvailableSlots(req: Request, res: Response): Promise<void> {
+    try {
+      const { date, serviceId } = req.query;
+
+      // ──── Validação ────
+      if (!date || !serviceId) {
+        res.status(400).json({
+          error: 'Query params obrigatórios: date, serviceId.',
+          code: 'MISSING_PARAMS',
+        });
+        return;
+      }
+
+      // ──── Validar se o serviço existe ────
+      const service = await getServiceById(serviceId as string);
+      if (!service) {
+        res.status(404).json({
+          error: 'Serviço não encontrado.',
+          code: 'SERVICE_NOT_FOUND',
+        });
+        return;
+      }
+
+      // ──── Obter slots disponíveis ────
+      const availableSlots = await getAvailableSlots(
+        date as string,
+        service.durationMinutes
+      );
+
+      res.status(200).json({ availableSlots });
+    } catch (error) {
+      console.error('❌ Erro ao obter slots disponíveis:', error);
+      res.status(500).json({
+        error: 'Erro interno do servidor.',
+        code: 'INTERNAL_ERROR',
+      });
+    }
+  },
 };
+

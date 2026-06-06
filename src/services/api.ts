@@ -208,12 +208,12 @@ export async function updateProfileAPI(
  * Cria um novo agendamento no banco de dados
  *
  * @param token - Token JWT
- * @param data - Dados do agendamento (service, date, time, price)
+ * @param data - Dados do agendamento (serviceId, date, time)
  * @returns Agendamento criado
  */
 export async function createAppointmentAPI(
   token: string,
-  data: { service: string; date: string; time: string; price: number }
+  data: { serviceId: string; date: string; time: string }
 ): Promise<{ appointment: ApiAppointment }> {
   return apiRequest<{ appointment: ApiAppointment }>('/appointments', {
     method: 'POST',
@@ -233,6 +233,26 @@ export async function getMyAppointmentsAPI(
   return apiRequest<{ appointments: ApiAppointment[] }>('/appointments/my', {
     method: 'GET',
   }, token);
+}
+
+/**
+ * Obtém horários disponíveis para uma data e serviço
+ *
+ * @param token - Token JWT
+ * @param date - Data no formato YYYY-MM-DD
+ * @param serviceId - ID do serviço
+ * @returns Array de horários disponíveis
+ */
+export async function getAvailableSlotsAPI(
+  token: string,
+  date: string,
+  serviceId: string
+): Promise<{ availableSlots: string[] }> {
+  return apiRequest<{ availableSlots: string[] }>(
+    `/appointments/available-slots?date=${date}&serviceId=${serviceId}`,
+    { method: 'GET' },
+    token
+  );
 }
 
 /**

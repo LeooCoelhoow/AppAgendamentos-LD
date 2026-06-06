@@ -9,17 +9,19 @@
  * Fluxo:
  * 1. Exibe informações do serviço selecionado no topo
  * 2. Usuário seleciona uma DATA (DateSelector)
- * 3. Usuário seleciona um HORÁRIO (TimeSlotGrid)
- * 4. Confirma o agendamento (PinkButton)
- * 5. Agendamento é salvo no BACKEND via API e navega de volta
+ * 3. Carrega horários disponíveis do backend dinamicamente
+ * 4. Usuário seleciona um HORÁRIO (TimeSlotGrid)
+ * 5. Confirma o agendamento (PinkButton)
+ * 6. Agendamento é salvo no BACKEND via API e navega de volta
  *
  * Validação:
  * - Botão só fica habilitado se data E horário forem selecionados
- * - Alert de confirmação ao salvar com sucesso
+ * - Horários são carregados dinamicamente do backend
+ * - Trata erro 409 (slot não disponível) com mensagem amigável
  * ============================================================
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
@@ -43,7 +45,8 @@ export default function BookingScreen() {
   const navigation = useNavigation();
 
   /** Hook para adicionar agendamento ao contexto global (agora via API) */
-  const { addAppointment } = useAppointments();
+  const { addAppointment, fetchAvailableSlots, availableSlots, isSlotsLoading } =
+    useAppointments();
 
   // ──────────────────────────────────────────────
   // Estado local da tela
@@ -75,6 +78,18 @@ export default function BookingScreen() {
   const isFormValid = selectedDate !== '' && selectedTime !== '' && !isSaving;
 
   /**
+   * Efeito: quando a data é selecionada, busca os horários disponíveis
+   */
+  useEffect(() => {
+    if (selectedDate && service.id) {
+      // Limpa a seleção de horário quando muda a data
+      setSelectedTime('');
+      // Busca os novos horários disponíveis
+      fetchAvailableSlots(selectedDate, service.id);
+    }
+  }, [selectedDate, service.id, fetchAvailableSlots]);
+
+  /**
    * handleConfirm — Processa a confirmação do agendamento
    *
    * 1. Envia o agendamento para o backend via API
@@ -87,10 +102,9 @@ export default function BookingScreen() {
 
       // Cria o agendamento no backend
       await addAppointment({
-        service: service.name,
+        serviceId: service.id,
         date: selectedDate,
         time: selectedTime,
-        price: service.price,
       });
 
       // Formata a data para exibição (DD/MM/YYYY)
@@ -105,10 +119,29 @@ export default function BookingScreen() {
       });
       setShowSuccess(true);
     } catch (error: any) {
-      Alert.alert(
-        'Erro ao agendar',
-        error.message || 'Ocorreu um erro ao salvar o agendamento. Tente novamente.',
-      );
+      // Trata erro 409: horário não está mais disponível
+      if (error.status === 409 || error.message?.includes('not available')) {
+        Alert.alert(
+          'Horário Indisponível',
+          'Este horário não está mais disponível. Escolha outro horário e tente novamente.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                // Recarrega os slots disponíveis
+                if (selectedDate && service.id) {
+                  fetchAvailableSlots(selectedDate, service.id);
+                }
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          'Erro ao agendar',
+          error.message || 'Ocorreu um erro ao salvar o agendamento. Tente novamente.',
+        );
+      }
     } finally {
       setIsSaving(false);
     }
@@ -169,8 +202,10 @@ export default function BookingScreen() {
 
         {/* ──── Grade de Horários ──── */}
         <TimeSlotGrid
+          availableSlots={availableSlots}
           selectedTime={selectedTime}
-          onSelectTime={setSelectedTime}       // Atualiza o estado ao selecionar
+          isLoading={isSlotsLoading}
+          onSelectTime={setSelectedTime}
         />
 
         {/* ──── Botão de Confirmar ──── */}
