@@ -272,11 +272,11 @@ export default function AdminAppointmentsScreen() {
           <View style={styles.cardHeader}>
             <View style={styles.serviceRow}>
               <View style={styles.emojiContainer}>
-                <Text style={styles.emoji}>{getServiceEmoji(appointment.service)}</Text>
+                <Text style={styles.emoji}>{getServiceEmoji(appointment.service.name)}</Text>
               </View>
               <View style={styles.serviceInfo}>
                 <Text style={styles.serviceName} numberOfLines={1}>
-                  {appointment.service}
+                  {appointment.service.name}
                 </Text>
                 <Text style={styles.clientName}>
                   👤 {appointment.user?.name || 'Cliente'}
@@ -401,11 +401,11 @@ export default function AdminAppointmentsScreen() {
               <View style={styles.cardHeader}>
                 <View style={styles.serviceRow}>
                   <View style={[styles.emojiContainer, { backgroundColor: Colors.successLight }]}>
-                    <Text style={styles.emoji}>{getServiceEmoji(appointment.service)}</Text>
+                    <Text style={styles.emoji}>{getServiceEmoji(appointment.service.name)}</Text>
                   </View>
                   <View style={styles.serviceInfo}>
                     <Text style={styles.serviceName} numberOfLines={1}>
-                      {appointment.service}
+                      {appointment.service.name}
                     </Text>
                     <Text style={styles.clientName}>
                       👤 {appointment.user?.name || 'Cliente'}
@@ -457,11 +457,11 @@ export default function AdminAppointmentsScreen() {
               <View style={styles.cardHeader}>
                 <View style={styles.serviceRow}>
                   <View style={[styles.emojiContainer, { backgroundColor: Colors.dangerLight }]}>
-                    <Text style={styles.emoji}>{getServiceEmoji(appointment.service)}</Text>
+                    <Text style={styles.emoji}>{getServiceEmoji(appointment.service.name)}</Text>
                   </View>
                   <View style={styles.serviceInfo}>
                     <Text style={[styles.serviceName, { opacity: 0.6 }]} numberOfLines={1}>
-                      {appointment.service}
+                      {appointment.service.name}
                     </Text>
                     <Text style={[styles.clientName, { opacity: 0.6 }]}>
                       👤 {appointment.user?.name || 'Cliente'}

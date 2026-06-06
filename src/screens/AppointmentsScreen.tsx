@@ -219,11 +219,11 @@ export default function AppointmentsScreen() {
         {/* Linha superior: Ícone + Nome + Badge */}
         <View style={styles.topRow}>
           <View style={styles.iconContainer}>
-            <Text style={styles.icon}>{getServiceEmoji(appointment.service)}</Text>
+            <Text style={styles.icon}>{getServiceEmoji(appointment.service.name)}</Text>
           </View>
 
           <Text style={styles.serviceName} numberOfLines={1}>
-            {appointment.service}
+            {appointment.service.name}
           </Text>
 
           <View style={[styles.badge, { backgroundColor: status.bgColor }]}>

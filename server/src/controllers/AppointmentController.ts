@@ -115,11 +115,20 @@ export const AppointmentController = {
       const appointments = await prisma.appointment.findMany({
         where: { userId: req.userId },
         orderBy: { date: 'desc' },
+        include: {
+          service: {
+            select: {
+              id: true,
+              name: true,
+              durationMinutes: true,
+            },
+          },
+        },
       });
 
       res.status(200).json({ appointments });
-    } catch (error) {
-      console.error('❌ Erro ao listar agendamentos:', error);
+    } catch (error) { // 👈 ADICIONADO DAQUI...
+      console.error('❌ Erro ao listar meus agendamentos:', error);
       res.status(500).json({
         error: 'Erro interno do servidor.',
         code: 'INTERNAL_ERROR',
@@ -198,11 +207,18 @@ export const AppointmentController = {
           user: {
             select: { id: true, name: true, email: true, phone: true },
           },
+          service: {
+            select: {
+              id: true,
+              name: true,
+              durationMinutes: true,
+            },
+          },
         },
       });
 
       res.status(200).json({ appointments });
-    } catch (error) {
+    } catch (error) { // 👈 ADICIONADO DAQUI...
       console.error('❌ Erro ao listar todos os agendamentos:', error);
       res.status(500).json({
         error: 'Erro interno do servidor.',

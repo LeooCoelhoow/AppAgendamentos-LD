@@ -92,8 +92,12 @@ export interface ApiAppointment {
   /** ID do usuário dono do agendamento */
   userId: string;
 
-  /** Nome do serviço (string simples, não o objeto completo) */
-  service: string;
+  /** Dados do serviço (objeto completo) */
+  service: {
+    id: string;
+    name: string;
+    durationMinutes: number;
+  };
 
   /** Data do agendamento (ISO string) */
   date: string;

@@ -121,12 +121,12 @@ export default function HomeScreen() {
                 <View style={styles.miniCardLeft}>
                   <View style={styles.miniEmojiContainer}>
                     <Text style={styles.miniEmoji}>
-                      {getServiceEmoji(appointment.service)}
+                      {getServiceEmoji(appointment.service.name)}
                     </Text>
                   </View>
                   <View>
                     <Text style={styles.miniServiceName} numberOfLines={1}>
-                      {appointment.service}
+                      {appointment.service.name}
                     </Text>
                     <Text style={styles.miniDate}>
                       📅 {formatDate(appointment.date)} • 🕐 {appointment.time}
