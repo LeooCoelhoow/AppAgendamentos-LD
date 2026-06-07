@@ -2,238 +2,166 @@
  * ============================================================
  * screens/ProfileScreen.tsx — Tela de Perfil do Usuário
  * ============================================================
- *
- * Tela que exibe as informações reais do perfil do usuário
- * autenticado via AuthContext. Os dados vêm do JWT/API.
- *
- * Seções:
- * 1. Avatar com nome e e-mail (dados reais do AuthContext)
- * 2. Estatísticas rápidas (total de agendamentos)
- * 3. Menu de opções (Editar Perfil, Notificações, Sobre, Sair)
- *
- * O botão "Sair" chama a função logout do AuthContext,
- * que remove o token e redireciona para a tela de Login.
- * ============================================================
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native'; // 👈 IMPORTADO
 import { Colors } from '../theme/colors';
 import { useAppointments } from '../context/AppointmentsContext';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
+import { getAllAppointmentsAPI } from '../services/api'; // 👈 IMPORTADO
+import { ApiAppointment } from '../types'; // 👈 IMPORTADO
 
-/**
- * Interface para os itens do menu de opções
- */
 interface MenuItem {
-  /** Identificador único do item */
   id: string;
-  /** Emoji como ícone do item */
   icon: string;
-  /** Texto do item */
   label: string;
-  /** Descrição auxiliar */
   subtitle: string;
 }
 
-/**
- * Lista de opções do menu do perfil
- *
- * Cada item tem um ícone (emoji), label e subtitle.
- * A ação de cada item pode ser implementada futuramente.
- */
 const menuItems: MenuItem[] = [
-  {
-    id: 'edit',
-    icon: '✏️',
-    label: 'Editar Perfil',
-    subtitle: 'Altere suas informações pessoais',
-  },
-  {
-    id: 'notifications',
-    icon: '🔔',
-    label: 'Notificações',
-    subtitle: 'Gerencie seus alertas e lembretes',
-  },
-  {
-    id: 'about',
-    icon: '💡',
-    label: 'Sobre o App',
-    subtitle: 'Versão, termos e políticas',
-  },
-  {
-    id: 'logout',
-    icon: '🚪',
-    label: 'Sair',
-    subtitle: 'Encerrar sua sessão',
-  },
+  { id: 'edit', icon: '✏️', label: 'Editar Perfil', subtitle: 'Altere suas informações pessoais' },
+  { id: 'notifications', icon: '🔔', label: 'Notificações', subtitle: 'Gerencie seus alertas e lembretes' },
+  { id: 'about', icon: '💡', label: 'Sobre o App', subtitle: 'Versão, termos e políticas' },
+  { id: 'logout', icon: '🚪', label: 'Sair', subtitle: 'Encerrar sua sessão' },
 ];
 
 export default function ProfileScreen() {
-  /** Lê os agendamentos para exibir estatísticas */
-  const { appointments } = useAppointments();
-  /** Dados do usuário autenticado e função de logout */
-  const { user, logout } = useAuth();
+  const { appointments } = useAppointments(); // Lista do cliente
+  const { user, logout, token } = useAuth(); // 👈 Pegamos o token aqui também
 
-  /**
-   * Handler do botão "Sair"
-   * Exibe confirmação antes de fazer logout
-   */
+  // Estado local para guardar os agendamentos do Admin
+  const [adminAppointments, setAdminAppointments] = useState<ApiAppointment[]>([]);
+
+  const ADMIN = user?.role === 'ADMIN';
+
+  // =========================================================================
+  // 🔄 ATUALIZAÇÃO EM TEMPO REAL PARA O ADMIN
+  // =========================================================================
+  useFocusEffect(
+    useCallback(() => {
+      async function fetchAdminStats() {
+        if (ADMIN && token) {
+          try {
+            const response = await getAllAppointmentsAPI(token);
+            setAdminAppointments(response.appointments);
+          } catch (error) {
+            console.error('Erro ao atualizar estatísticas do perfil:', error);
+          }
+        }
+      }
+      fetchAdminStats();
+    }, [ADMIN, token])
+  );
+
   const handleLogout = () => {
     if (Platform.OS === 'web') {
       const confirm = window.confirm('Tem certeza que deseja sair?');
-      if (confirm) {
-        logout();
-      }
+      if (confirm) logout();
     } else {
-      Alert.alert(
-        'Sair da conta',
-        'Tem certeza que deseja sair?',
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          {
-            text: 'Sair',
-            style: 'destructive',
-            onPress: async () => {
-              await logout();
-            },
-          },
-        ]
-      );
+      Alert.alert('Sair da conta', 'Tem certeza que deseja sair?', [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Sair', style: 'destructive', onPress: async () => await logout() },
+      ]);
     }
   };
 
+  // =========================================================================
+  // 📊 LÓGICA DE ESTATÍSTICAS
+  // =========================================================================
+  
+  // Se for Admin, usa a lista da API. Se for Cliente, usa a do Contexto.
+  const dataSource = ADMIN ? adminAppointments : appointments;
+
+  const activeAppointments = dataSource.filter(
+    (a) => a.status === 'PENDING' || a.status === 'CONFIRMED'
+  );
+  const activeCount = activeAppointments.length;
+
+  const completedAppointments = dataSource.filter((a) => a.status === 'COMPLETED');
+  const completedCount = completedAppointments.length;
+
   return (
     <View style={styles.container}>
-      {/* ──────────── HEADER ──────────── */}
-      <Header
-        title="Meu Perfil"
-        subtitle="Suas informações e configurações"
-      />
+      <Header title="Meu Perfil" subtitle="Suas informações e configurações" />
 
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* ──── Avatar e Informações do Usuário ──── */}
         <View style={styles.profileCard}>
-          {/* Avatar circular com inicial do nome do usuário */}
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
               {user?.name ? user.name.charAt(0).toUpperCase() : '👤'}
             </Text>
           </View>
 
-          {/* Nome do usuário (dados reais do AuthContext) */}
           <Text style={styles.userName}>{user?.name || 'Usuário'}</Text>
-
-          {/* E-mail do usuário (dados reais) */}
           <Text style={styles.userEmail}>{user?.email || ''}</Text>
 
-          {/* ──── Estatísticas Rápidas ──── */}
-          <View style={styles.statsRow}>
-            {/* Total de agendamentos */}
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{appointments.length}</Text>
-              <Text style={styles.statLabel}>Agendamentos</Text>
+          {/* ──── Estatísticas Rápidas (EXCLUSIVO PARA ADMIN) ──── */}
+          {ADMIN && (
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{activeCount}</Text>
+                <Text style={styles.statLabel}>Ativos</Text>
+              </View>
+
+              <View style={styles.statDivider} />
+
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{completedCount}</Text>
+                <Text style={styles.statLabel}>Concluídos</Text>
+              </View>
             </View>
-
-            {/* Separador vertical */}
-            <View style={styles.statDivider} />
-
-            {/* Agendamentos confirmados */}
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {appointments.filter((a) => a.status === 'CONFIRMED').length}
-              </Text>
-              <Text style={styles.statLabel}>Confirmados</Text>
-            </View>
-
-            {/* Separador vertical */}
-            <View style={styles.statDivider} />
-
-            {/* Agendamentos concluídos */}
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {appointments.filter((a) => a.status === 'COMPLETED').length}
-              </Text>
-              <Text style={styles.statLabel}>Concluídos</Text>
-            </View>
-          </View>
+          )}
         </View>
 
-        {/* ──── Menu de Opções ──── */}
         <View style={styles.menuCard}>
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={item.id}
               style={[
                 styles.menuItem,
-                // Não coloca borda no último item
                 index < menuItems.length - 1 && styles.menuItemBorder,
               ]}
               activeOpacity={0.6}
               onPress={() => {
-                // Ação do botão "Sair" — chama o logout
-                if (item.id === 'logout') {
-                  handleLogout();
-                }
-                // TODO: Implementar ações dos outros itens do menu
+                if (item.id === 'logout') handleLogout();
               }}
             >
-              {/* Ícone do item (emoji) */}
               <View style={styles.menuIconContainer}>
                 <Text style={styles.menuIcon}>{item.icon}</Text>
               </View>
-
-              {/* Textos do item */}
               <View style={styles.menuTextContainer}>
                 <Text style={styles.menuLabel}>{item.label}</Text>
                 <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
               </View>
-
-              {/* Seta indicando que é clicável */}
               <Text style={styles.menuArrow}>›</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* ──── Rodapé ──── */}
         <Text style={styles.versionText}>App Agendamentos v1.0.0</Text>
-
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </View>
   );
 }
 
-/**
- * Estilos da ProfileScreen
- *
- * Card de perfil centralizado com avatar, nome e estatísticas.
- * Menu de opções com ícones, labels e setas em card separado.
- */
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 24,
-  },
-  // ──── Card do Perfil ────
+  container: { flex: 1, backgroundColor: Colors.background },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingTop: 24 },
   profileCard: {
-    backgroundColor: Colors.surface,              // Fundo branco
+    backgroundColor: Colors.surface,              
     marginHorizontal: 20,
     borderRadius: 20,
     padding: 24,
-    alignItems: 'center',                         // Centraliza o conteúdo
-    // Sombra
+    alignItems: 'center',                         
     shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
@@ -242,24 +170,23 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   avatar: {
-    width: 80,                                    // Tamanho do avatar
+    width: 80,                                    
     height: 80,
-    borderRadius: 40,                             // Circular
-    backgroundColor: Colors.accent,               // Fundo rosa pastel
+    borderRadius: 40,                             
+    backgroundColor: Colors.accent,               
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
-    // Borda rosa sutil
     borderWidth: 3,
     borderColor: Colors.primaryLight,
   },
   avatarText: {
-    fontSize: 36,                                 // Inicial do nome ou emoji
-    color: Colors.primary,                        // Rosa principal
+    fontSize: 36,                                 
+    color: Colors.primary,                        
     fontWeight: '700',
   },
   userName: {
-    fontSize: 22,                                 // Nome grande
+    fontSize: 22,                                 
     fontWeight: '700',
     color: Colors.textPrimary,
     marginBottom: 4,
@@ -269,41 +196,28 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginBottom: 20,
   },
-  // ──── Estatísticas ────
   statsRow: {
-    flexDirection: 'row',                         // Estatísticas em linha
+    flexDirection: 'row',                         
     alignItems: 'center',
     width: '100%',
-    justifyContent: 'space-evenly',               // Distribui igualmente
-    backgroundColor: Colors.accentLight,          // Fundo rosa muito suave
+    justifyContent: 'space-evenly',               
+    backgroundColor: Colors.accentLight,          
     borderRadius: 14,
     paddingVertical: 14,
   },
-  statItem: {
-    alignItems: 'center',
-  },
+  statItem: { alignItems: 'center' },
   statNumber: {
-    fontSize: 22,                                 // Número grande
+    fontSize: 22,                                 
     fontWeight: '700',
-    color: Colors.primary,                        // Rosa principal
+    color: Colors.primary,                        
   },
-  statLabel: {
-    fontSize: 11,                                 // Label pequeno
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  statDivider: {
-    width: 1,                                     // Linha vertical fina
-    height: 30,
-    backgroundColor: Colors.border,               // Rosa sutil
-  },
-  // ──── Menu de Opções ────
+  statLabel: { fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
+  statDivider: { width: 1, height: 30, backgroundColor: Colors.border },
   menuCard: {
     backgroundColor: Colors.surface,
     marginHorizontal: 20,
     borderRadius: 20,
     padding: 6,
-    // Sombra
     shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.05,
@@ -311,17 +225,14 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   menuItem: {
-    flexDirection: 'row',                         // Layout horizontal
+    flexDirection: 'row',                         
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 14,
   },
-  menuItemBorder: {
-    borderBottomWidth: 1,                         // Linha entre itens
-    borderBottomColor: Colors.border,
-  },
+  menuItemBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
   menuIconContainer: {
-    width: 40,                                    // Container do emoji
+    width: 40,                                    
     height: 40,
     borderRadius: 12,
     backgroundColor: Colors.accent,
@@ -329,36 +240,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  menuIcon: {
-    fontSize: 18,
-  },
-  menuTextContainer: {
-    flex: 1,                                      // Ocupa o espaço restante
-  },
-  menuLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-  },
-  menuSubtitle: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  menuArrow: {
-    fontSize: 24,                                 // Seta grande
-    color: Colors.textSecondary,
-    fontWeight: '300',
-  },
-  // ──── Rodapé ────
-  versionText: {
-    textAlign: 'center',
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 24,
-    marginBottom: 10,
-  },
-  bottomSpacer: {
-    height: 30,
-  },
+  menuIcon: { fontSize: 18 },
+  menuTextContainer: { flex: 1 },
+  menuLabel: { fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
+  menuSubtitle: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  menuArrow: { fontSize: 24, color: Colors.textSecondary, fontWeight: '300' },
+  versionText: { textAlign: 'center', fontSize: 12, color: Colors.textSecondary, marginTop: 24, marginBottom: 10 },
+  bottomSpacer: { height: 30 },
 });
