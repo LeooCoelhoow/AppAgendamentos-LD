@@ -28,6 +28,7 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { Colors } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
@@ -131,7 +132,36 @@ export default function AdminFinancialScreen() {
   /**
    * Remove uma despesa
    */
-  const handleDeleteExpense = (id: string, name: string) => {
+  const handleDeleteExpense = async (id: string, name: string) => {
+  // 1. Isolamos a lógica de exclusão para não repetir código
+  const confirmDelete = async () => {
+    try {
+      setDeletingId(id);
+      if (!token) return;
+      await deleteExpenseAPI(token, id);
+      await fetchReport();
+    } catch (error: any) {
+      const errorMessage = error.message || 'Erro ao remover despesa.';
+      // Mostramos o erro adequadamente de acordo com a plataforma
+      if (Platform.OS === 'web') {
+        window.alert(`Erro: ${errorMessage}`);
+      } else {
+        Alert.alert('Erro', errorMessage);
+      }
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // 2. Verificamos a plataforma antes de exibir o alerta
+  if (Platform.OS === 'web') {
+    // Na web, usamos o 'window.confirm' nativo do navegador
+    const userConfirmed = window.confirm(`Deseja remover "${name}"?`);
+    if (userConfirmed) {
+      await confirmDelete();
+    }
+  } else {
+    // No mobile (iOS/Android), usamos o Alert nativo do React Native
     Alert.alert(
       'Remover Despesa',
       `Deseja remover "${name}"?`,
@@ -140,22 +170,12 @@ export default function AdminFinancialScreen() {
         {
           text: 'Remover',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              setDeletingId(id);
-              if (!token) return;
-              await deleteExpenseAPI(token, id);
-              await fetchReport();
-            } catch (error: any) {
-              Alert.alert('Erro', error.message || 'Erro ao remover despesa.');
-            } finally {
-              setDeletingId(null);
-            }
-          },
+          onPress: confirmDelete,
         },
       ]
     );
-  };
+  }
+};
 
   if (isLoading) {
     return (

@@ -57,6 +57,9 @@ model Appointment {
   adminConfirmed  Boolean  @default(false) // Confirmação do admin (finalizar atendimento)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  // A TRAVA DE SEGURANÇA AQUI:
+  @@unique([date, time])
 }
 
 /// Modelo de Despesa — gastos do administrador para o relatório financeiro

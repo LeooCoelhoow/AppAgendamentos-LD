@@ -26,7 +26,7 @@ import { Service } from '../types';
  */
 export const services: Service[] = [
   {
-    id: 'b09852b9-8bf0-4cc8-9b60-54905fd8e951',
+    id: '4ea7d669-2079-4a7e-8352-6365248b0114',
     name: 'Brow Lamination',
     description: 'Alinhamento e fixação dos fios da sobrancelha para um visual com mais definição e volume.',
     price: 110.0,
@@ -34,7 +34,7 @@ export const services: Service[] = [
     icon: '✨',
   },
   {
-    id: 'd2b1ead2-702b-4b68-bc03-e382c4785778',
+    id: '8da10344-3b2b-45b7-b25d-8f07517ff2e3',
     name: 'Design de Sobrancelha',
     description: 'Design de Sobrancelha com pinça para realçar o formato do rosto.',
     price: 35.0,
@@ -42,7 +42,7 @@ export const services: Service[] = [
     icon: '🖌️',
   },
   {
-    id: '87191229-f9c0-4d86-a571-dec6b6512fe3',
+    id: '1caae044-aabc-49f9-9c66-a04d091f23fd',
     name: 'Lash Lifting',
     description: 'Curvatura e tintura dos cílios naturais para um olhar marcante e duradouro.',
     price: 120.0,
@@ -50,7 +50,7 @@ export const services: Service[] = [
     icon: '👁️',
   },
   {
-    id: '601d414d-32c6-4841-8428-35acfb71e647',
+    id: 'ccb2a759-039c-42d5-bc77-f7ca6162620d',
     name: 'Combo Soft Glam',
     description: 'Design de Sobrancelha + Lash Lifting',
     price: 140.0,
@@ -58,7 +58,7 @@ export const services: Service[] = [
     icon: '🎀',
   },
   {
-    id: '29f1ce8f-0efd-4298-9c3d-6c5c81b65aaa',
+    id: '604d7499-2ff8-402b-8ddf-50d54c179adb',
     name: 'Combo Duo Lift Perfeito',
     description: 'Brow Lamination + Lash Lifting',
     price: 199.90,
@@ -66,17 +66,17 @@ export const services: Service[] = [
     icon: '💎',
   },
   {
-    id: '45c741aa-2fb3-49d2-aba2-60644d247e23',
+    id: 'ecde9225-6ae4-4605-bfae-4105136123c3',
     name: 'Henna de Sobrancelha',
-    description: 'Coloração natural com henna para preencher e definir as sobrancelhas.',
+    description: 'Design e coloração natural com henna para preencher e definir as sobrancelhas.',
     price: 45.0,
     duration: 60,
     icon: '🎨',
   },
   {
-    id: '81f259b9-4bb1-4e7b-bdab-eb42e54486e4',
+    id: '4a610424-2e2c-42c6-998d-6f319d4e2c86',
     name: 'Tintura de Sobrancelha',
-    description: 'Coloração com natural dos fios com tintura para realçar e definir as sobrancelhas.',
+    description: 'Design e coloração natural dos fios com tintura para realçar e definir as sobrancelhas.',
     price: 50.0,
     duration: 60,
     icon: '🎨',
