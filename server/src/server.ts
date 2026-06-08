@@ -35,13 +35,19 @@ const app = express();
 
 // ──── Middlewares Globais ────
 
-/** CORS — permite requisições de qualquer origem (necessário para React Native) */
-app.use(cors({
-  // Permite acesso do site de produção e do seu app no celular (desenvolvimento)
-  origin: ['https://ldbeautyfrontend.vercel.app', 'http://localhost:8081', 'http://10.0.2.2:8081'], 
+const corsOptions = {
+  // Lista exata de quem pode acessar a API
+  origin: ['https://ldbeautyfrontend.vercel.app', 'http://localhost:8081', 'http://10.0.2.2:8081'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true // <-- ISSO É OBRIGATÓRIO QUANDO A ORIGEM É ESPECÍFICA
+};
+
+/** CORS — permite requisições de qualquer origem (necessário para React Native) */
+app.use(cors(corsOptions));
+
+// O Segredo para Serverless: Força o Express a responder os "Preflights" (OPTIONS)
+app.options('*', cors(corsOptions));
 
 /** Body parser JSON — interpreta o corpo das requisições como JSON */
 app.use(express.json());
