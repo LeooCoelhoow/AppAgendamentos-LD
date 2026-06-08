@@ -46,7 +46,8 @@ function createPrismaClient(): PrismaClient {
 
   const adapter = new PrismaPg(pool);
 
-  return new PrismaClient({ adapter } as any);
+  // Remova o "as any" e tente garantir que o adapter seja passado corretamente
+  return new PrismaClient({ adapter });
 }
 
 /** Instância única do Prisma Client */
