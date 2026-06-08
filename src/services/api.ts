@@ -44,6 +44,7 @@
 
 import { Platform } from 'react-native';
 import { ApiAppointment, Expense, FinancialReport } from '../types';
+import '../.env.local';
 
 /**
  * URL base da API
@@ -57,7 +58,7 @@ import { ApiAppointment, Expense, FinancialReport } from '../types';
  */
 // Puxa a variável de ambiente se estiver em produção (Vercel)
 // Caso contrário (desenvolvimento local), usa as configurações do localhost
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || Platform.select({
+const API_BASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || Platform.select({
   android: 'http://10.0.2.2:3333',
   ios: 'http://localhost:3333',
   default: 'http://localhost:3333',
