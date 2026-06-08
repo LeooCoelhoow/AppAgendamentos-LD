@@ -36,7 +36,12 @@ const app = express();
 // ──── Middlewares Globais ────
 
 /** CORS — permite requisições de qualquer origem (necessário para React Native) */
-app.use(cors());
+app.use(cors({
+  // Permite acesso do site de produção e do seu app no celular (desenvolvimento)
+  origin: ['https://ldbeautyfrontend.vercel.app', 'http://localhost:8081', 'http://10.0.2.2:8081'], 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 /** Body parser JSON — interpreta o corpo das requisições como JSON */
 app.use(express.json());
