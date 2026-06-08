@@ -27,7 +27,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  binaryTargets = ["native", "debian-openssl-1.1.x", "rhel-openssl-1.0.x"]
+  binaryTargets = ["rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 /// Modelo de Usuário — representa clientes e administradores
