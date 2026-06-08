@@ -72,13 +72,20 @@ app.use('/expenses', expenseRoutes);
 app.use('/reports', reportRoutes);
 
 // ──── Inicialização do Servidor ────
-const PORT = process.env.PORT || 3333;
 
-app.listen(PORT, () => {
-  console.log('');
-  console.log('  🌸 ════════════════════════════════════════');
-  console.log(`  🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`  📡 http://localhost:${PORT}`);
-  console.log('  🌸 ════════════════════════════════════════');
-  console.log('');
-});
+// Apenas executa o app.listen se NÃO estiver no ambiente de produção da Vercel.
+// Isso garante que o 'npm run dev' continue funcionando perfeitamente no seu computador local.
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3333;
+  app.listen(PORT, () => {
+    console.log('');
+    console.log('  🌸 ════════════════════════════════════════');
+    console.log(`  🚀 Servidor rodando localmente na porta ${PORT}`);
+    console.log(`  📡 http://localhost:${PORT}`);
+    console.log('  🌸 ════════════════════════════════════════');
+    console.log('');
+  });
+}
+
+// Exporta o app para a Vercel consumir
+export default app;
