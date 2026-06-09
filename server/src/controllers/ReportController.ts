@@ -90,7 +90,7 @@ export const ReportController = {
       });
 
       const totalRevenue = completedAppointments.reduce(
-        (sum, apt) => sum + apt.price,
+        (sum: number, apt: any) =>   sum + apt.price,
         0
       );
 
@@ -101,7 +101,7 @@ export const ReportController = {
       });
 
       const totalExpenses = expenses.reduce(
-        (sum, exp) => sum + exp.value,
+        (sum: number, exp: any) => sum + exp.value,
         0
       );
 
@@ -113,7 +113,7 @@ export const ReportController = {
         totalRevenue,
         totalExpenses,
         netProfit,
-        revenueItems: completedAppointments.map((apt) => ({
+        revenueItems: completedAppointments.map((apt: any) => ({
           id: apt.id,
           service: apt.service.name,
           clientName: apt.user.name,

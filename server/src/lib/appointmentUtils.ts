@@ -47,7 +47,7 @@ export async function getBookedSlots(date: string): Promise<
     },
   });
 
-  return appointments.map((apt) => ({
+  return appointments.map((apt: any) => ({
     time: apt.time,
     durationMinutes: apt.service.durationMinutes,
   }));
