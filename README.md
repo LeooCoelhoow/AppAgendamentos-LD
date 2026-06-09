@@ -1,8 +1,8 @@
 Essa são as telas do app!
 |----------------------------------------------------------------------------------------------------------------------------|
-<img width="396" height="858" alt="Captura de tela 2026-06-08 233843" src="https://github.com/user-attachments/assets/05e7b1be-b7dc-49a6-a9d3-e9ef9b28365c" />
 <img width="394" height="850" alt="Captura de tela 2026-05-05 211035" src="https://github.com/user-attachments/assets/f22a6bfb-d87e-4a8d-8b9b-475a5119cbfe" />
 <img width="394" height="850" alt="Captura de tela 2026-05-05 211547" src="https://github.com/user-attachments/assets/c648bfe7-b12b-4506-b419-ab25c57cf8c1" />
+<img width="396" height="858" alt="Captura de tela 2026-06-08 233843" src="https://github.com/user-attachments/assets/05e7b1be-b7dc-49a6-a9d3-e9ef9b28365c" />
 <img width="395" height="854" alt="Captura de tela 2026-06-08 233516" src="https://github.com/user-attachments/assets/833710e5-349a-4f31-bbe1-ef3812e558a3" />
 <img width="397" height="856" alt="Captura de tela 2026-06-08 233522" src="https://github.com/user-attachments/assets/ad7879c2-25dc-4409-ae31-438ddff00471" />
 <img width="394" height="852" alt="Captura de tela 2026-06-08 233536" src="https://github.com/user-attachments/assets/c0d73fc7-83c9-4dbc-a0a3-e19a30eb9fbf" />
