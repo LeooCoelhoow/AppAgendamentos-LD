@@ -33,21 +33,22 @@ import { reportRoutes } from './routes/report.routes';
 // ──── Inicialização do Express ────
 const app = express();
 
-// ──── Middlewares Globais ────
+// ──── MIDDLEWARE MANUAL E DEFINITIVO DE CORS ────
+app.use((req, res, next) => {
+  // 1. Autoriza APENAS o seu front-end oficial
+  res.setHeader('Access-Control-Allow-Origin', 'https://ldbeautyfrontend.vercel.app');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS, POST, PUT, PATCH, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
 
-const corsOptions = {
-  // Lista exata de quem pode acessar a API
-  origin: ['https://ldbeautyfrontend.vercel.app', 'http://localhost:8081', 'http://10.0.2.2:8081'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  credentials: true // <-- ISSO É OBRIGATÓRIO QUANDO A ORIGEM É ESPECÍFICA
-};
+  // 2. O Segredo: Se o navegador estiver só "perguntando" (OPTIONS), responde com Sucesso (200) na hora!
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-/** CORS — permite requisições de qualquer origem (necessário para React Native) */
-app.use(cors(corsOptions));
-
-// O Segredo para Serverless: Força o Express a responder os "Preflights" (OPTIONS)
-app.options('*', cors(corsOptions));
+  // 3. Se for uma requisição real (POST, GET), deixa passar para as rotas
+  next();
+});
 
 /** Body parser JSON — interpreta o corpo das requisições como JSON */
 app.use(express.json());
