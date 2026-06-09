@@ -35,8 +35,18 @@ const app = express();
 
 // ──── MIDDLEWARE MANUAL E DEFINITIVO DE CORS ────
 app.use((req, res, next) => {
-  // 1. Autoriza APENAS o seu front-end oficial
-  res.setHeader('Access-Control-Allow-Origin', 'https://ldbeautyfrontend.vercel.app');
+  console.log(`[RADAR] 🛸 Requisição recebida: ${req.method} ${req.url}`);
+
+  // Se for requisição do celular, libera qualquer origem
+  const isMobile = req.get('User-Agent')?.includes('ReactNative') || false;
+
+  if (isMobile) {
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Libera geral
+  } else {
+    // Senão, só o site oficial
+    res.setHeader('Access-Control-Allow-Origin', 'https://ldbeautyfrontend.vercel.app');
+  }
+
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS, POST, PUT, PATCH, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
