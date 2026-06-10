@@ -37,13 +37,22 @@ const app = express();
 app.use((req, res, next) => {
   console.log(`[RADAR] 🛸 Requisição recebida: ${req.method} ${req.url}`);
 
-  // Se for requisição do celular, libera qualquer origem
+  const origin = req.get('Origin') || '';
+
+  // Se for requisição do celular (React Native), libera qualquer origem
   const isMobile = req.get('User-Agent')?.includes('ReactNative') || false;
 
+  // Aceita a URL de produção E qualquer URL de preview da Vercel do projeto
+  const isAllowedVercel = origin === 'https://ldbeautyfrontend.vercel.app'
+    || origin.includes('ldbeautyfrontend') && origin.endsWith('.vercel.app');
+
   if (isMobile) {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Libera geral
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  } else if (isAllowedVercel) {
+    // Espelha a origin exata — necessário para CORS funcionar com credenciais
+    res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
-    // Senão, só o site oficial
+    // Fallback: URL de produção
     res.setHeader('Access-Control-Allow-Origin', 'https://ldbeautyfrontend.vercel.app');
   }
 
@@ -51,12 +60,12 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS, POST, PUT, PATCH, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
 
-  // 2. O Segredo: Se o navegador estiver só "perguntando" (OPTIONS), responde com Sucesso (200) na hora!
+  // Se o navegador estiver só "perguntando" (OPTIONS), responde com Sucesso (200) na hora!
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // 3. Se for uma requisição real (POST, GET), deixa passar para as rotas
+  // Se for uma requisição real (POST, GET), deixa passar para as rotas
   next();
 });
 
