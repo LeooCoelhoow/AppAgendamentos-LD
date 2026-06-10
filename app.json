@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "AppAgendamentos",
-    "slug": "AppAgendamentos",
+    "name": "LDBeauty",
+    "slug": "LDBeauty",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/fiveicon-logo-LD.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/fiveicon-logo-LD.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
