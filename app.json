@@ -23,7 +23,11 @@
       "package": "com.leoocoelhoow.LDBeauty"
     },
     "web": {
-      "favicon": "./assets/fiveicon-logo-LD.png"
+      "favicon": "./assets/fiveicon-logo-LD.png",
+      "shortName": "LDBeauty",
+      "themeColor": "#E6F4FE",
+      "backgroundColor": "#ffffff",
+      "display": "standalone"
     },
     "plugins": [
       "expo-status-bar"
